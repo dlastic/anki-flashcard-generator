@@ -1,7 +1,7 @@
 from generator import generate_cloze_deck
 
 
-def main():
+def main() -> None:
     deck_name = "Generated Deck"
     output_path = "./output/output.apkg"
 
