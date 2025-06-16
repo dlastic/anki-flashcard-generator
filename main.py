@@ -2,7 +2,7 @@ from generator import generate_cloze_deck
 
 
 def main() -> None:
-    deck_name = "Generated Deck"
+    deck_name = "01_Languages::02_Français"
     output_path = "./output/output.apkg"
 
     flashcards = [

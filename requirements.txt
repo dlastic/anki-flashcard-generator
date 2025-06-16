@@ -1,3 +1,4 @@
+beautifulsoup4==4.13.4
 cached-property==2.0.1
 chevron==0.14.0
 frozendict==2.4.6
@@ -7,3 +8,5 @@ mdurl==0.1.2
 Pygments==2.19.1
 PyYAML==6.0.2
 rich==14.0.0
+soupsieve==2.7
+typing_extensions==4.14.0
