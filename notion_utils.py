@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 
 def extract_paragraph_texts(filepath: str) -> list[str]:
@@ -7,7 +7,7 @@ def extract_paragraph_texts(filepath: str) -> list[str]:
         soup = BeautifulSoup(f, "html.parser")
 
     page_body = soup.find("div", class_="page-body")
-    if not page_body:
+    if not isinstance(page_body, Tag):
         return []
 
     return [p.get_text(strip=True) for p in page_body.find_all("p")]
