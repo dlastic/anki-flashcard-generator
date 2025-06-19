@@ -4,6 +4,7 @@ import genanki
 def generate_cloze_deck(
     deck_name: str, flashcards: list[tuple[str, str]], output_path: str
 ) -> None:
+    """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(2025051101, deck_name)
 
     for source_line, target_line in flashcards:
