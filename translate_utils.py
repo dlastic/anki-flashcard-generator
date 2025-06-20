@@ -2,6 +2,7 @@ import os
 
 import deepl
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -14,12 +15,23 @@ def translate_sentence_deepl(sentence: str, target_lang: str):
     translator = deepl.Translator(DEEPL_API_KEY)
     result = translator.translate_text(sentence, target_lang=target_lang)
 
-    return result.text
+    return result.text  # type: ignore
+
+
+def translate_sentence_chatgpt(sentence: str) -> str:
+    """Translate sentence using ChatGPT"""
+    client = OpenAI()
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        instructions="Translate the following sentence to English. Respond with only the translated sentence.",
+        input=sentence,
+    )
+
+    return response.output_text
 
 
 print(
-    translate_sentence_deepl(
-        "Elle est sortie de l'hôpital, mais elle doit y retourner la semaine prochaine pour refaire le pansement.",
-        "en-us",
+    translate_sentence_chatgpt(
+        "Elle est sortie de l'hôpital, mais elle doit y retourner la semaine prochaine pour refaire le pansement."
     )
 )
