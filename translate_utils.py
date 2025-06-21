@@ -32,6 +32,6 @@ def translate_sentence_chatgpt(sentence: str) -> str:
 
 print(
     translate_sentence_chatgpt(
-        "Elle est sortie de l'hôpital, mais elle doit y retourner la semaine prochaine pour refaire le pansement."
+        "Das erkennst du an ihrem Gang? Wow."
     )
 )
