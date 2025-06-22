@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from notion_client import Client
 
 load_dotenv()
-notion = Client(auth=os.getenv("NOTION_TOKEN"))
+notion = Client(auth=os.getenv("NOTION_API_KEY"))
 
 
 def extract_paragraph_texts(filepath: str) -> list[str]:
@@ -36,20 +36,31 @@ def extract_paragraph_texts(filepath: str) -> list[str]:
 #     print(blocks)
 
 
-def get_page_id(title: str) -> str:
+def get_page_id(title: str) -> str | None:
     """Search for a page by title using Notion API."""
+    if not isinstance(title, str):
+        raise TypeError(f"Title must be a string, got {type(title).__name__}")
+
     response = notion.search(
         query=title,
         sort={"direction": "ascending", "timestamp": "last_edited_time"},
         filter={"value": "page", "property": "object"},
     )
 
-    return response["results"][0]["id"]
+    for result in response["results"]:
+        result_title = extract_page_title(result)
+        if title == result_title:
+            return result["id"]
+
+    return None
 
 
-# sample_filepath = "./input/input.html"
-# output = extract_paragraph_texts(sample_filepath)
-# for sentence in output:
-#     print(sentence)
+def extract_page_title(result: dict) -> str | None:
+    """Extract the plain-text title from a Notion page object."""
+    properties = result.get("properties", {})
 
-print(get_page_id("fr"))
+    for prop in properties.values():
+        if prop.get("type") == "title":
+            return prop["title"][0]["plain_text"]
+
+    return None
