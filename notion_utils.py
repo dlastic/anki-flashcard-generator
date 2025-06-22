@@ -1,4 +1,5 @@
 import os
+from typing import cast
 
 from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
@@ -41,10 +42,13 @@ def get_page_id(title: str) -> str | None:
     if not isinstance(title, str):
         raise TypeError(f"Title must be a string, got {type(title).__name__}")
 
-    response = notion.search(
-        query=title,
-        sort={"direction": "ascending", "timestamp": "last_edited_time"},
-        filter={"value": "page", "property": "object"},
+    response = cast(
+        dict,
+        notion.search(
+            query=title,
+            sort={"direction": "ascending", "timestamp": "last_edited_time"},
+            filter={"value": "page", "property": "object"},
+        ),
     )
 
     for result in response["results"]:
