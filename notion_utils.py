@@ -1,7 +1,6 @@
 import os
 from typing import cast
 
-from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
 from notion_client import Client
 
@@ -9,32 +8,15 @@ load_dotenv()
 notion = Client(auth=os.getenv("NOTION_API_KEY"))
 
 
-def extract_paragraph_texts(filepath: str) -> list[str]:
-    """Extract and return all paragraph texts inside the page-body div."""
-    with open(filepath, "r", encoding="utf-8") as f:
-        soup = BeautifulSoup(f, "html.parser")
+def extract_page_title(result: dict) -> str | None:
+    """Extract the plain-text title from a Notion page object."""
+    properties = result.get("properties", {})
 
-    page_body = soup.find("div", class_="page-body")
-    if not isinstance(page_body, Tag):
-        return []
+    for prop in properties.values():
+        if prop.get("type") == "title":
+            return prop["title"][0]["plain_text"]
 
-    return [p.get_text(strip=True) for p in page_body.find_all("p")]
-
-
-# def get_page_content(page_id):
-
-#     cursor = None
-#     blocks = []
-#     page_id = "277f14e5-25a6-4396-ab0e-c3fc8cfb6bad"
-
-#     while True:
-#         response = notion.blocks.children.list(block_id=page_id, start_cursor=cursor)
-#         blocks.extend(response["results"])
-#         if not response.get("has_more"):
-#             break
-#         cursor = response["next_cursor"]
-
-#     print(blocks)
+    return None
 
 
 def get_page_id(title: str) -> str | None:
@@ -59,12 +41,39 @@ def get_page_id(title: str) -> str | None:
     return None
 
 
-def extract_page_title(result: dict) -> str | None:
-    """Extract the plain-text title from a Notion page object."""
-    properties = result.get("properties", {})
+def format_rich_text(rich_text_array: list[dict]) -> str:
+    """Convert Notion rich_text fragments to Markdown-style formatted text."""
+    parts = []
 
-    for prop in properties.values():
-        if prop.get("type") == "title":
-            return prop["title"][0]["plain_text"]
+    for fragment in rich_text_array:
+        text = fragment.get("plain_text", "")
+        anno = fragment.get("annotations", {})
 
-    return None
+        if anno.get("underline"):
+            text = f"<u>{text}</u>"
+
+        parts.append(text)
+
+    return "".join(parts)
+
+
+def get_page_content(title: str) -> list[str] | None:
+    """Return plain text content lines of a Notion page by its title."""
+    page_id = get_page_id(title)
+    if not page_id:
+        print(f"No page found with title: {title}")
+        return None
+
+    # Retrieve child blocks of the page
+    response = cast(dict, notion.blocks.children.list(block_id=page_id))
+
+    content_lines = []
+    for block in response.get("results", []):
+        block_type = block.get("type")
+        text_items = block.get(block_type, {}).get("rich_text", [])
+        block_text = format_rich_text(text_items)
+
+        if block_text:
+            content_lines.append(block_text)
+
+    return content_lines if content_lines else None
