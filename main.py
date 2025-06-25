@@ -1,6 +1,7 @@
 import sys
 
 from notion_utils import get_page_content
+from general_utils import print_seperating_line
 
 
 def main() -> None:
@@ -8,8 +9,10 @@ def main() -> None:
     title = sys.argv[1]
     content = get_page_content(title)
     if content is None:
+        print_seperating_line()
         sys.exit(f"Exiting: No page found with title: {title}")
 
+    print_seperating_line()
     print("Page content loaded successfully.")
 
 
