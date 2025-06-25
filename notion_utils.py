@@ -61,7 +61,6 @@ def get_page_content(title: str) -> str | None:
     """Return plain text content lines of a Notion page by its title."""
     page_id = get_page_id(title)
     if not page_id:
-        print(f"No page found with title: {title}")
         return None
 
     # Retrieve child blocks of the page

@@ -1,17 +1,16 @@
-from generator import generate_cloze_deck
+import sys
+
+from notion_utils import get_page_content
 
 
 def main() -> None:
-    deck_name = "01_Languages::02_Français"
-    output_path = "./output/output.apkg"
+    """Generate anki cloze deck from sentences in the Notion page."""
+    title = sys.argv[1]
+    content = get_page_content(title)
+    if content is None:
+        sys.exit(f"Exiting: No page found with title: {title}")
 
-    flashcards = [
-        ("I go to school every day.", "Chodím do {{c1::školy}} každý den."),
-        ("She is a good friend.", "Je to {{c1::dobrá}} kamarádka."),
-    ]
-
-    generate_cloze_deck(deck_name, flashcards, output_path)
-    print(f"Deck '{deck_name}' has been generated and saved to '{output_path}'.")
+    print("Page content loaded successfully.")
 
 
 if __name__ == "__main__":
