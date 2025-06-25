@@ -57,7 +57,7 @@ def format_rich_text(rich_text_array: list[dict]) -> str:
     return "".join(parts)
 
 
-def get_page_content(title: str) -> list[str] | None:
+def get_page_content(title: str) -> str | None:
     """Return plain text content lines of a Notion page by its title."""
     page_id = get_page_id(title)
     if not page_id:
@@ -76,4 +76,4 @@ def get_page_content(title: str) -> list[str] | None:
         if block_text:
             content_lines.append(block_text)
 
-    return content_lines if content_lines else None
+    return "\n".join(content_lines)
