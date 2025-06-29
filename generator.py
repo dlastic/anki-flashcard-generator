@@ -1,6 +1,20 @@
 import genanki
 
 
+def generate_flashcards(
+    content: list[str], translated_content: list[list[str]]
+) -> list[str]:
+    """Generate a list of flashcards"""
+    flashcards = []
+    for target_line, translation in zip(content, translated_content):
+        source_word, source_sentence = translation
+        flashcards.append(
+            f"<i>{source_word}</i><br><i>{source_sentence}</i><br>{target_line}"
+        )
+
+    return flashcards
+
+
 def generate_cloze_deck(
     deck_name: str, flashcards: list[tuple[str, str]], output_path: str
 ) -> None:
