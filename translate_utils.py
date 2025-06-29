@@ -19,11 +19,12 @@ def translate_sentences_chatgpt(sentences: str) -> str | None:
     2. The full sentence translated into English.
 
     Return only raw JSON, without enclosing it in triple quotes or markdown formatting.
+    Format the JSON as compact as possible. Avoid indentation, line breaks, or extra spacing.
     """.strip()
 
     client = OpenAI()
     response = client.responses.create(
-        model="o4-mini",
+        model="gpt-4o",
         instructions=instructions,
         input=sentences,
     )
