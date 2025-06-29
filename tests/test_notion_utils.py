@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from notion_utils import extract_page_title, get_page_id
+from notion_utils import extract_page_title, format_rich_text, get_page_id
 
 DUMMY_PAGE_ID = "1234abcd5678efgh"
 
@@ -76,3 +76,30 @@ def test_get_page_id_no_match():
 def test_get_page_id_invalid_type():
     with pytest.raises(TypeError):
         get_page_id(123)  # type: ignore
+
+
+def test_format_rich_text_basic():
+    mock_rich_text = [
+        {"plain_text": "Hello ", "annotations": {"underline": False}},
+        {"plain_text": "World", "annotations": {"underline": True}},
+    ]
+
+    result = format_rich_text(mock_rich_text)
+    assert result == "Hello <u>World</u>"
+
+
+def test_format_rich_text_empty():
+    mock_rich_text = []
+
+    result = format_rich_text(mock_rich_text)
+    assert result == ""
+
+
+def test_format_rich_text_no_annotations():
+    mock_rich_text = [
+        {"plain_text": "Just text without ", "annotations": {"underline": False}},
+        {"plain_text": "formatting", "annotations": {"underline": False}},
+    ]
+
+    result = format_rich_text(mock_rich_text)
+    assert result == "Just text without formatting"
