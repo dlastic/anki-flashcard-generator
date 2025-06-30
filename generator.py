@@ -1,4 +1,11 @@
+import re
+
 import genanki
+
+
+def convert_underline_to_cloze(sentence: str) -> str:
+    """Replace <u>word</u> with {{c1::word}}"""
+    return re.sub(r"<u>(.*?)</u>", r"{{c1::\1}}", sentence)
 
 
 def generate_flashcards(
@@ -8,8 +15,9 @@ def generate_flashcards(
     flashcards = []
     for target_line, translation in zip(content, translated_content):
         source_word, source_sentence = translation
+        target_line_cloze = convert_underline_to_cloze(target_line)
         flashcards.append(
-            f"<i>{source_word}</i><br><i>{source_sentence}</i><br>{target_line}"
+            f"<i>{source_word}</i><br><i>{source_sentence}</i><br>{target_line_cloze}"
         )
 
     return flashcards
