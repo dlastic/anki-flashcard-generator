@@ -21,9 +21,6 @@ def extract_page_title(result: dict) -> str | None:
 
 def get_page_id(title: str) -> str | None:
     """Search for a page by title using Notion API."""
-    if not isinstance(title, str):
-        raise TypeError(f"Title must be a string, got {type(title).__name__}")
-
     response = cast(
         dict,
         notion.search(
