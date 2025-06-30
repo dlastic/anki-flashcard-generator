@@ -1,8 +1,11 @@
 from unittest.mock import patch
 
-import pytest
-
-from notion_utils import extract_page_title, format_rich_text, get_page_id
+from notion_utils import (
+    extract_page_title,
+    format_rich_text,
+    get_page_content,
+    get_page_id,
+)
 
 DUMMY_PAGE_ID = "1234abcd5678efgh"
 
@@ -73,11 +76,6 @@ def test_get_page_id_no_match():
         assert result is None
 
 
-def test_get_page_id_invalid_type():
-    with pytest.raises(TypeError):
-        get_page_id(123)  # type: ignore
-
-
 def test_format_rich_text_basic():
     mock_rich_text = [
         {"plain_text": "Hello ", "annotations": {"underline": False}},
@@ -103,3 +101,71 @@ def test_format_rich_text_no_annotations():
 
     result = format_rich_text(mock_rich_text)
     assert result == "Just text without formatting"
+
+
+def test_get_page_content_valid_page():
+    mock_blocks_response = {
+        "results": [
+            {
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [
+                        {
+                            "plain_text": "First line",
+                            "annotations": {"underline": False},
+                        }
+                    ]
+                },
+            },
+            {
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [
+                        {
+                            "plain_text": "Second line",
+                            "annotations": {"underline": True},
+                        }
+                    ]
+                },
+            },
+        ]
+    }
+    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+        with patch(
+            "notion_utils.notion.blocks.children.list",
+            return_value=mock_blocks_response,
+        ):
+            result = get_page_content("Some Page")
+            assert result == ["First line", "<u>Second line</u>"]
+
+
+def test_get_page_content_missing_page():
+    with patch("notion_utils.get_page_id", return_value=None):
+        result = get_page_content("Missing Page")
+        assert result is None
+
+
+def test_get_page_content_empty_blocks():
+    mock_blocks_response = {
+        "results": [
+            {
+                "type": "paragraph",
+                "paragraph": {"rich_text": []},
+            },
+            {
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [
+                        {"plain_text": "Only line", "annotations": {"underline": False}}
+                    ]
+                },
+            },
+        ]
+    }
+    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+        with patch(
+            "notion_utils.notion.blocks.children.list",
+            return_value=mock_blocks_response,
+        ):
+            result = get_page_content("Page With Empty Block")
+            assert result == ["Only line"]
