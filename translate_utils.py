@@ -11,7 +11,7 @@ def translate_sentences_chatgpt(sentences: list[str]) -> str | None:
     sentences_str = "\n".join(sentences)
 
     instructions = """
-    You are a professional translator. For each sentence provided in the input list (sentences are separated by newlines), identify the word wrapped in <u>...</u> tags. Translate that underlined word into natural English in the context of the full sentence. If a one-word translation is not possible, use multiple words or a short phrase that best captures the meaning.
+    You are a professional translator. For each sentence provided in the input list (sentences are separated by newlines), identify the word wrapped in <u>...</u> tags. Translate that underlined word into natural English in the context of the full sentence. If the word is a slang term, provide an equivalent slang term in English. If a one-word translation is not possible, use multiple words or a short phrase that best captures the meaning.
 
     Also translate the entire sentence into English, and wrap the translated word in <u>...</u> tags.
 
