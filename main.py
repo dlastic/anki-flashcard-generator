@@ -1,13 +1,14 @@
 import json
 import sys
 
-from generator import generate_flashcards
+from generator import generate_cloze_deck, generate_flashcards
 from notion_utils import get_page_content
 from translate_utils import translate_sentences_chatgpt
 
 
 def main() -> None:
     """Generate anki cloze deck from sentences in the Notion page."""
+    output_path = "./output/output.apkg"
     title = sys.argv[1]
     content = get_page_content(title)
     print_seperating_line()
@@ -24,6 +25,10 @@ def main() -> None:
     flashcards = generate_flashcards(content, json.loads(translated_content))
     print_seperating_line()
     print("Flashcards generated successfully.")
+
+    generate_cloze_deck(title, flashcards, output_path)
+    print_seperating_line()
+    print(f"Anki cloze deck generated successfully at: {output_path}")
 
 
 def print_seperating_line() -> None:
