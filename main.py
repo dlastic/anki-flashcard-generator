@@ -8,6 +8,16 @@ from translate_utils import translate_sentences_chatgpt
 
 def main() -> None:
     """Generate anki cloze deck from sentences in the Notion page."""
+    LANGUAGE_DECK_MAP = {
+        "EN": "01_Languages::01_English",
+        "FR": "01_Languages::02_Français",
+        "RU": "01_Languages::03_Русский",
+        "DE": "01_Languages::04_Deutsch",
+        "IT": "01_Languages::05_Italiano",
+        "FA": "01_Languages::06_Farsi",
+        "ES": "01_Languages::07_Español",
+    }
+
     output_path = "./output/output.apkg"
     title = sys.argv[1]
     content = get_page_content(title)
@@ -26,7 +36,7 @@ def main() -> None:
     print_seperating_line()
     print("Flashcards generated successfully.")
 
-    generate_cloze_deck(title, flashcards, output_path)
+    generate_cloze_deck(LANGUAGE_DECK_MAP[title], flashcards, output_path)
     print_seperating_line()
     print(f"Anki cloze deck generated successfully at: {output_path}")
 
