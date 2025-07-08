@@ -70,6 +70,9 @@ def get_page_content(title: str) -> list[str] | None:
         block_text = format_rich_text(text_items)
 
         if block_text:
+            if "<u>" not in block_text:
+                print("No underlined word found in the sentence: ", block_text)
+                continue
             content_lines.append(block_text)
 
     return content_lines

@@ -16,7 +16,7 @@ def translate_sentences_chatgpt(sentences: list[str]) -> str | None:
     Also translate the entire sentence into English, and wrap the translated word in <u>...</u> tags.
 
     Return your result as a valid JSON array of arrays, each with two strings:
-    1. The translated underlined word (or multiple words, or short phrase, context-aware).
+    1. The translations for the underlined word (or multiple words, or short phrase, context-aware).
     2. The full sentence translated into English.
 
     Return only raw JSON, without enclosing it in triple quotes or markdown formatting.
