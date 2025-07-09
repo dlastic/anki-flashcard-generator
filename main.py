@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 
@@ -18,12 +19,33 @@ def main() -> None:
         "ES": "01_Languages::07_Español",
     }
 
+    parser = argparse.ArgumentParser(description="Language description")
+    parser.add_argument(
+        "-s",
+        "--source",
+        default="EN",
+        type=str.upper,
+        help="Source language (default: EN)",
+    )
+    parser.add_argument(
+        "-t",
+        "--target",
+        required=True,
+        type=str.upper,
+        help="Target language (required)",
+    )
+    args = parser.parse_args()
+
     output_path = "./output/output.apkg"
-    title = sys.argv[1]
-    content = get_page_content(title)
+    source_lang, target_lang = args.source, args.target
+
+    if target_lang not in LANGUAGE_DECK_MAP:
+        sys.exit(f"Exiting: Unsupported target language: {target_lang}")
+
+    content = get_page_content(target_lang)
     print_seperating_line()
     if content is None:
-        sys.exit(f"Exiting: No page found with title: {title}")
+        sys.exit(f"Exiting: No page found with title: {target_lang}")
     print("Page content loaded successfully.")
 
     translated_content = translate_sentences_chatgpt(content)
@@ -36,7 +58,7 @@ def main() -> None:
     print_seperating_line()
     print("Flashcards generated successfully.")
 
-    generate_cloze_deck(LANGUAGE_DECK_MAP[title], flashcards, output_path)
+    generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
     print_seperating_line()
     print(f"Anki cloze deck generated successfully at: {output_path}")
 
