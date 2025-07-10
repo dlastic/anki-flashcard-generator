@@ -19,6 +19,11 @@ def main() -> None:
         "ES": "01_Languages::07_Español",
     }
 
+    LANGUAGE_CODE_MAP = {
+        "EN": "English",
+        "SK": "Slovak",
+    }
+
     parser = argparse.ArgumentParser(description="Language description")
     parser.add_argument(
         "-s",
@@ -39,6 +44,8 @@ def main() -> None:
     output_path = "./output/output.apkg"
     source_lang, target_lang = args.source, args.target
 
+    if source_lang not in LANGUAGE_CODE_MAP:
+        sys.exit(f"Exiting: Unsupported source language: {source_lang}")
     if target_lang not in LANGUAGE_DECK_MAP:
         sys.exit(f"Exiting: Unsupported target language: {target_lang}")
 
@@ -48,7 +55,7 @@ def main() -> None:
         sys.exit(f"Exiting: No page found with title: {target_lang}")
     print("Page content loaded successfully.")
 
-    translated_content = translate_sentences_chatgpt(content)
+    translated_content = translate_sentences_chatgpt(content, source_lang)
     print_seperating_line()
     if translated_content is None:
         sys.exit("Exiting: No sentences to translate.")
