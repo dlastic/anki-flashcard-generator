@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import sys
 
 from generator import generate_cloze_deck, generate_flashcards
@@ -9,6 +10,11 @@ from translate_utils import translate_sentences_chatgpt
 
 def main() -> None:
     """Generate anki cloze deck from sentences in the Notion page."""
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s"
+    )
+    logger = logging.getLogger()
+
     LANGUAGE_DECK_MAP = {
         "EN": "01_Languages::01_English",
         "FR": "01_Languages::02_Français",
@@ -45,33 +51,29 @@ def main() -> None:
     source_lang, target_lang = args.source, args.target
 
     if source_lang not in LANGUAGE_CODE_MAP:
-        sys.exit(f"Exiting: Unsupported source language: {source_lang}")
+        logger.error(f"Unsupported source language: {source_lang}")
+        sys.exit(1)
     if target_lang not in LANGUAGE_DECK_MAP:
-        sys.exit(f"Exiting: Unsupported target language: {target_lang}")
+        logger.error(f"Unsupported target language: {target_lang}")
+        sys.exit(1)
 
     content = get_page_content(target_lang)
-    print_seperating_line()
     if content is None:
-        sys.exit(f"Exiting: No page found with title: {target_lang}")
-    print("Page content loaded successfully.")
+        logger.error(f"No page found with title: {target_lang}")
+        sys.exit(1)
+    logger.info("Page content loaded successfully.")
 
     translated_content = translate_sentences_chatgpt(content, source_lang)
-    print_seperating_line()
     if translated_content is None:
-        sys.exit("Exiting: No sentences to translate.")
-    print("Translation completed successfully.")
+        logger.error("No sentences to translate.")
+        sys.exit(1)
+    logger.info("Translation completed successfully.")
 
     flashcards = generate_flashcards(content, json.loads(translated_content))
-    print_seperating_line()
-    print("Flashcards generated successfully.")
+    logger.info("Flashcards generated successfully.")
 
     generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
-    print_seperating_line()
-    print(f"Anki cloze deck generated successfully at: {output_path}")
-
-
-def print_seperating_line() -> None:
-    print("--------------------------------------------")
+    logger.info(f"Anki cloze deck generated successfully at: {output_path}")
 
 
 if __name__ == "__main__":
