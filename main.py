@@ -4,16 +4,12 @@ import logging
 import sys
 
 from generator import generate_cloze_deck, generate_flashcards
-from notion_utils import get_page_content
+from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
 from translate_utils import translate_sentences_chatgpt
 
 
 def main() -> None:
     """Generate anki cloze deck from sentences in the Notion page."""
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s"
-    )
-    logger = logging.getLogger()
 
     LANGUAGE_DECK_MAP = {
         "EN": "01_Languages::01_English",
@@ -29,6 +25,13 @@ def main() -> None:
         "EN": "English",
         "SK": "Slovak",
     }
+
+    OUTPUT_PATH = "./output/output.apkg"
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s"
+    )
+    logger = logging.getLogger()
 
     parser = argparse.ArgumentParser(description="Language description")
     parser.add_argument(
@@ -47,9 +50,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    output_path = "./output/output.apkg"
     source_lang, target_lang = args.source, args.target
-
     if source_lang not in LANGUAGE_CODE_MAP:
         logger.error(f"Unsupported source language: {source_lang}")
         sys.exit(1)
@@ -57,11 +58,12 @@ def main() -> None:
         logger.error(f"Unsupported target language: {target_lang}")
         sys.exit(1)
 
-    content = get_page_content(target_lang)
-    if content is None:
-        logger.error(f"No page found with title: {target_lang}")
+    try:
+        content = get_page_content(target_lang)
+        logger.info("Page content loaded successfully.")
+    except (PageNotFoundError, PageEmptyError) as e:
+        logger.error(str(e))
         sys.exit(1)
-    logger.info("Page content loaded successfully.")
 
     translated_content = translate_sentences_chatgpt(content, source_lang)
     if translated_content is None:
@@ -72,8 +74,8 @@ def main() -> None:
     flashcards = generate_flashcards(content, json.loads(translated_content))
     logger.info("Flashcards generated successfully.")
 
-    generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
-    logger.info(f"Anki cloze deck generated successfully at: {output_path}")
+    generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
+    logger.info(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,20 @@
+import logging
 import os
 from typing import cast
 
 from dotenv import load_dotenv
 from notion_client import Client
 
+
+class PageNotFoundError(Exception):
+    pass
+
+
+class PageEmptyError(Exception):
+    pass
+
+
+logger = logging.getLogger(__name__)
 load_dotenv()
 notion = Client(auth=os.getenv("NOTION_API_KEY"))
 
@@ -54,13 +65,12 @@ def format_rich_text(rich_text_array: list[dict]) -> str:
     return "".join(parts)
 
 
-def get_page_content(title: str) -> list[str] | None:
+def get_page_content(title: str) -> list[str]:
     """Return plain text content lines of a Notion page by its title."""
     page_id = get_page_id(title)
     if not page_id:
-        return None
+        raise PageNotFoundError(f"No Notion page found with title: {title}")
 
-    # Retrieve child blocks of the page
     response = cast(dict, notion.blocks.children.list(block_id=page_id))
 
     content_lines = []
@@ -71,8 +81,13 @@ def get_page_content(title: str) -> list[str] | None:
 
         if block_text:
             if "<u>" not in block_text:
-                print("No underlined word found in the sentence: ", block_text)
+                logger.warning(f"No underlined word found: {block_text}")
                 continue
             content_lines.append(block_text)
+
+    if not content_lines:
+        raise PageEmptyError(
+            f"Page '{title}' contains no usable content with <u>...</u>"
+        )
 
     return content_lines
