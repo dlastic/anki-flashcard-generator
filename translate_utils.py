@@ -1,13 +1,21 @@
-from dotenv import load_dotenv
-from openai import OpenAI
+import logging
 
+from dotenv import load_dotenv
+from openai import OpenAI, OpenAIError
+
+
+class TranslationError(Exception):
+    pass
+
+
+logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> str | None:
+def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> str:
     """Translate sentence using ChatGPT."""
     if not sentences:
-        return None
+        raise TranslationError("No sentences provided for translation.")
     sentences_str = "\n".join(sentences)
 
     instructions = f"""
@@ -23,11 +31,21 @@ def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> s
     Format the JSON as compact as possible. Avoid indentation, line breaks, or extra spacing.
     """.strip()
 
-    client = OpenAI()
-    response = client.responses.create(
-        model="gpt-4o",
-        instructions=instructions,
-        input=sentences_str,
-    )
+    try:
+        client = OpenAI()
+        response = client.responses.create(
+            model="gpt-4o",
+            instructions=instructions,
+            input=sentences_str,
+        )
+    except OpenAIError as e:
+        try:
+            error_message = e.response.json()["error"]["message"]
+        except Exception:
+            error_message = str(e)
+        raise TranslationError(error_message) from e
+
+    if not response or not response.output_text:
+        raise TranslationError("Translation service returned empty output.")
 
     return response.output_text

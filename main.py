@@ -5,7 +5,7 @@ import sys
 
 from generator import generate_cloze_deck, generate_flashcards
 from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
-from translate_utils import translate_sentences_chatgpt
+from translate_utils import TranslationError, translate_sentences_chatgpt
 
 
 def main() -> None:
@@ -65,11 +65,12 @@ def main() -> None:
         logger.error(str(e))
         sys.exit(1)
 
-    translated_content = translate_sentences_chatgpt(content, source_lang)
-    if translated_content is None:
-        logger.error("No sentences to translate.")
+    try:
+        translated_content = translate_sentences_chatgpt(content, source_lang)
+        logger.info("Translation completed successfully.")
+    except TranslationError as e:
+        logger.error(f"Translation failed: {e}")
         sys.exit(1)
-    logger.info("Translation completed successfully.")
 
     flashcards = generate_flashcards(content, json.loads(translated_content))
     logger.info("Flashcards generated successfully.")
