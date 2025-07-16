@@ -8,6 +8,10 @@ class FlashcardGenerationError(Exception):
     pass
 
 
+class DeckGenerationError(Exception):
+    pass
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -55,8 +59,13 @@ def generate_cloze_deck(
     deck = genanki.Deck(2025051101, deck_name)
 
     for flashcard in flashcards:
-        text_field = flashcard
-        note = genanki.Note(model=genanki.CLOZE_MODEL, fields=[text_field, ""])
+        if not isinstance(flashcard, str) or not flashcard.strip():
+            logger.warning(f"Skipping flashcard due to invalid content: {flashcard}")
+            continue
+        note = genanki.Note(model=genanki.CLOZE_MODEL, fields=[flashcard, ""])
         deck.add_note(note)
 
-    genanki.Package(deck).write_to_file(output_path)
+    try:
+        genanki.Package(deck).write_to_file(output_path)
+    except Exception as e:
+        raise DeckGenerationError(f"Failed to write deck: {e}") from e

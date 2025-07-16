@@ -3,7 +3,12 @@ import json
 import logging
 import sys
 
-from generator import generate_cloze_deck, generate_flashcards, FlashcardGenerationError
+from generator import (
+    generate_cloze_deck,
+    generate_flashcards,
+    FlashcardGenerationError,
+    DeckGenerationError,
+)
 from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
 from translate_utils import TranslationError, translate_sentences_chatgpt
 
@@ -79,8 +84,12 @@ def main() -> None:
         logger.error(f"Flashcard generation failed: {e}")
         sys.exit(1)
 
-    generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
-    logger.info(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
+    try:
+        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
+        logger.info(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
+    except DeckGenerationError as e:
+        logger.error(str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
