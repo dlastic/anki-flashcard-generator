@@ -1,5 +1,3 @@
-import logging
-
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 
@@ -8,7 +6,6 @@ class TranslationError(Exception):
     pass
 
 
-logger = logging.getLogger(__name__)
 load_dotenv()
 
 
