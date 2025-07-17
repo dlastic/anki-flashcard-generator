@@ -65,7 +65,7 @@ def format_rich_text(rich_text_array: list[dict]) -> str:
     return "".join(parts)
 
 
-def get_page_content(title: str) -> list[str]:
+def get_page_content(title: str, count: int) -> list[str]:
     """Return plain text content lines of a Notion page by its title."""
     page_id = get_page_id(title)
     if not page_id:
@@ -84,6 +84,8 @@ def get_page_content(title: str) -> list[str]:
                 logger.warning(f"No underlined word found: {block_text}")
                 continue
             content_lines.append(block_text)
+            if len(content_lines) == count:
+                break
 
     if not content_lines:
         raise PageEmptyError(

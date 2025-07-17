@@ -53,9 +53,16 @@ def main() -> None:
         type=str.upper,
         help="Target language (required)",
     )
+    parser.add_argument(
+        "-c",
+        "--count",
+        default=5,
+        type=int,
+        help="Maximum number of sentences to translate (default: 5)",
+    )
     args = parser.parse_args()
 
-    source_lang, target_lang = args.source, args.target
+    source_lang, target_lang, sentence_count = args.source, args.target, args.count
     if source_lang not in LANGUAGE_CODE_MAP:
         logger.error(f"Unsupported source language: {source_lang}")
         sys.exit(1)
@@ -64,7 +71,7 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        content = get_page_content(target_lang)
+        content = get_page_content(target_lang, sentence_count)
         logger.info("Page content loaded successfully.")
     except (PageNotFoundError, PageEmptyError) as e:
         logger.error(str(e))
