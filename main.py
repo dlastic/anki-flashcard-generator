@@ -10,7 +10,11 @@ from generator import (
     DeckGenerationError,
 )
 from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
-from translate_utils import TranslationError, translate_sentences_chatgpt
+from translate_utils import (
+    TranslationError,
+    translate_sentences_chatgpt,
+    translate_sentences_gemini,
+)
 
 
 def main() -> None:
@@ -78,7 +82,7 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        translated_content = translate_sentences_chatgpt(content, source_lang)
+        translated_content = translate_sentences_gemini(content, source_lang)
         logger.info("Translation completed successfully.")
     except TranslationError as e:
         logger.error(f"Translation failed: {e}")

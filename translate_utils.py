@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
+from google import genai
+from google.genai import types
 
 
 class TranslationError(Exception):
@@ -52,3 +54,27 @@ def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> s
         raise TranslationError("Translation service returned empty output.")
 
     return response.output_text
+
+
+def translate_sentences_gemini(sentences: list[str], source_lang="Slovak") -> str:
+    """Translate sentence using Google Gemini."""
+    if not sentences:
+        raise TranslationError("No sentences provided for translation.")
+    instructions = _build_instructions(source_lang)
+    sentences_str = "\n".join(sentences)
+
+    client = genai.Client()
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=sentences_str,
+        config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            system_instruction=instructions,
+            response_mime_type="application/json",
+        ),
+    )
+
+    if not response or not response.text:
+        raise TranslationError("Translation service returned empty output.")
+
+    return response.text
