@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import sys
+import os
 
 from generator import (
     generate_cloze_deck,
@@ -35,7 +36,10 @@ def main() -> None:
         "SK": "Slovak",
     }
 
-    OUTPUT_PATH = "./output/output.apkg"
+    OUTPUT_FILENAME = "flashcard_deck.apkg"
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, OUTPUT_FILENAME)
 
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s"
@@ -96,8 +100,8 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
-        logger.info(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
+        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
+        logger.info(f"Anki cloze deck generated successfully at: {output_path}")
     except DeckGenerationError as e:
         logger.error(str(e))
         sys.exit(1)
