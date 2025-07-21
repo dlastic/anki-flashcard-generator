@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
 from google import genai
 from google.genai import types
+import json
 
 
 class TranslationError(Exception):
@@ -29,7 +30,9 @@ def _build_instructions(source_lang: str) -> str:
     return _translation_instructions_template.format(source_lang=source_lang)
 
 
-def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> str:
+def translate_sentences_chatgpt(
+    sentences: list[str], source_lang="Slovak"
+) -> list[list[str]]:
     """Translate sentence using ChatGPT."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
@@ -53,10 +56,17 @@ def translate_sentences_chatgpt(sentences: list[str], source_lang="Slovak") -> s
     if not response or not response.output_text:
         raise TranslationError("Translation service returned empty output.")
 
-    return response.output_text
+    try:
+        parsed = json.loads(response.output_text)
+    except json.JSONDecodeError as e:
+        raise TranslationError(
+            f"Response is not valid JSON: {e}\nRaw: {response.output_text}"
+        )
+
+    return parsed
 
 
-def translate_sentences_gemini(sentences: list[str], source_lang="Slovak") -> str:
+def translate_sentences_gemini(sentences: list[str], source_lang="Slovak") -> list[list[str]]:
     """Translate sentence using Google Gemini."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
@@ -77,4 +87,9 @@ def translate_sentences_gemini(sentences: list[str], source_lang="Slovak") -> st
     if not response or not response.text:
         raise TranslationError("Translation service returned empty output.")
 
-    return response.text
+    try:
+        parsed = json.loads(response.text)
+    except json.JSONDecodeError as e:
+        raise TranslationError(f"Response is not valid JSON: {e}\nRaw: {response.text}")
+
+    return parsed

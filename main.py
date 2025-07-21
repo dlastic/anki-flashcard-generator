@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 import sys
 import os
@@ -93,7 +92,7 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        flashcards = generate_flashcards(content, json.loads(translated_content))
+        flashcards = generate_flashcards(content, translated_content)
         logger.info("Flashcards generated successfully.")
     except FlashcardGenerationError as e:
         logger.error(f"Flashcard generation failed: {e}")
