@@ -1,7 +1,4 @@
 from dotenv import load_dotenv
-from openai import OpenAI, OpenAIError
-from google import genai
-from google.genai import types
 import json
 
 
@@ -10,7 +7,6 @@ class TranslationError(Exception):
 
 
 load_dotenv()
-
 
 _translation_instructions_template = """
 You are a professional translator. For each sentence provided in the input list (sentences are separated by newlines), identify the word wrapped in <u>...</u> tags. Translate that underlined word into natural {source_lang} in the context of the full sentence. If the word is a slang term, provide an equivalent slang term in {source_lang}. If a one-word translation is not possible, use multiple words or a short phrase that best captures the meaning. Always provide two similar translations for the underlined word, separated by a comma followed by a space (, ).
@@ -39,6 +35,8 @@ def translate_sentences_chatgpt(
     instructions = _build_instructions(source_lang)
     sentences_str = "\n".join(sentences)
 
+    from openai import OpenAI, OpenAIError
+
     try:
         client = OpenAI()
         response = client.responses.create(
@@ -66,12 +64,17 @@ def translate_sentences_chatgpt(
     return parsed
 
 
-def translate_sentences_gemini(sentences: list[str], source_lang="Slovak") -> list[list[str]]:
+def translate_sentences_gemini(
+    sentences: list[str], source_lang="Slovak"
+) -> list[list[str]]:
     """Translate sentence using Google Gemini."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
     instructions = _build_instructions(source_lang)
     sentences_str = "\n".join(sentences)
+
+    from google import genai
+    from google.genai import types
 
     client = genai.Client()
     response = client.models.generate_content(
