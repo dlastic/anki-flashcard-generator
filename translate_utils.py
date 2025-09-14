@@ -1,9 +1,19 @@
 from dotenv import load_dotenv
-import json
+from pydantic import BaseModel
 
 
 class TranslationError(Exception):
     pass
+
+
+class TranslationItem(BaseModel):
+    words_source: str
+    sentence_source: str
+    sentence_target: str
+
+
+class TranslationResponse(BaseModel):
+    translations: list[TranslationItem]
 
 
 load_dotenv()
@@ -13,12 +23,13 @@ You are a professional translator. For each sentence provided in the input list 
 
 Also translate the entire sentence into {source_lang}, and wrap the translated word in <u>...</u> tags.
 
-Return your result as a valid JSON array of arrays, each with two strings:
-1. The translations for the underlined word (or multiple words, or short phrase, context-aware), with exactly one space after the comma.
-2. The full sentence translated into {source_lang}.
+Your response must be a valid JSON object with a single property "translations", which is an array of objects. Each object must have the following properties:
 
-Return only raw JSON, without enclosing it in triple quotes or markdown formatting.
-Format the JSON as compact as possible. Avoid indentation, line breaks, or extra spacing.
+{{
+  "words_source": "first translation, second translation of the underlined word",
+  "sentence_source": "full translated sentence with <u>underlined word</u>",
+  "sentence_target": "original sentence with <u>underlined word</u>"
+}}
 """.strip()
 
 
@@ -28,7 +39,7 @@ def _build_instructions(source_lang: str) -> str:
 
 def translate_sentences_chatgpt(
     sentences: list[str], source_lang="Slovak"
-) -> list[list[str]]:
+) -> list[TranslationItem]:
     """Translate sentence using ChatGPT."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
@@ -39,10 +50,11 @@ def translate_sentences_chatgpt(
 
     try:
         client = OpenAI()
-        response = client.responses.create(
+        response = client.responses.parse(
             model="gpt-4o",
             instructions=instructions,
             input=sentences_str,
+            text_format=TranslationResponse,
         )
     except OpenAIError as e:
         try:
@@ -51,22 +63,15 @@ def translate_sentences_chatgpt(
             error_message = str(e)
         raise TranslationError(error_message) from e
 
-    if not response or not response.output_text:
+    if not response or not response.output_parsed:
         raise TranslationError("Translation service returned empty output.")
 
-    try:
-        parsed = json.loads(response.output_text)
-    except json.JSONDecodeError as e:
-        raise TranslationError(
-            f"Response is not valid JSON: {e}\nRaw: {response.output_text}"
-        )
-
-    return parsed
+    return response.output_parsed.translations
 
 
 def translate_sentences_gemini(
     sentences: list[str], source_lang="Slovak"
-) -> list[list[str]]:
+) -> list[TranslationItem]:
     """Translate sentence using Google Gemini."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
@@ -84,15 +89,11 @@ def translate_sentences_gemini(
             thinking_config=types.ThinkingConfig(thinking_budget=0),
             system_instruction=instructions,
             response_mime_type="application/json",
+            response_schema=TranslationResponse,
         ),
     )
 
-    if not response or not response.text:
+    if not response or not response.parsed:
         raise TranslationError("Translation service returned empty output.")
 
-    try:
-        parsed = json.loads(response.text)
-    except json.JSONDecodeError as e:
-        raise TranslationError(f"Response is not valid JSON: {e}\nRaw: {response.text}")
-
-    return parsed
+    return response.parsed.translations
