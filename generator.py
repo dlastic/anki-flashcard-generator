@@ -17,9 +17,17 @@ class DeckGenerationError(Exception):
 logger = logging.getLogger(__name__)
 
 
-def convert_underline_to_cloze(sentence: str) -> str:
-    """Replace <u>word</u> with {{c1::word}}"""
-    return re.sub(r"<u>(.*?)</u>", r"{{c1::\1}}", sentence)
+def convert_bold_text(sentence: str, format_type: str) -> str:
+    """Replace **word** with {{c1::word}} or <u>word</u> based on format_type."""
+    pattern = r"\*\*(.*?)\*\*"
+    if format_type == "cloze":
+        replacement = r"{{c1::\1}}"
+    elif format_type == "underline":
+        replacement = r"<u>\1</u>"
+    else:
+        raise ValueError(f"Unsupported format type: {format_type}")
+
+    return re.sub(pattern, replacement, sentence)
 
 
 def generate_flashcards(translated_content: list[TranslationItem]) -> list[str]:
@@ -32,15 +40,16 @@ def generate_flashcards(translated_content: list[TranslationItem]) -> list[str]:
             translation.sentence_target,
         )
 
-        if "<u>" not in sentence_target or "</u>" not in sentence_target:
+        if "**" not in sentence_target:
             logger.warning(
-                f"Skipping flashcard due to missing underline tags in: {sentence_target}"
+                f"Skipping flashcard due to missing bold tags in: {sentence_target}"
             )
             continue
 
-        sentence_target_cloze = convert_underline_to_cloze(sentence_target)
+        sentence_source_underline = convert_bold_text(sentence_source, "underline")
+        sentence_target_cloze = convert_bold_text(sentence_target, "cloze")
         flashcards.append(
-            f"<i>{words_source}</i><br><i>{sentence_source}</i><br>{sentence_target_cloze}"
+            f"<i>{words_source}</i><br><i>{sentence_source_underline}</i><br>{sentence_target_cloze}"
         )
 
     return flashcards

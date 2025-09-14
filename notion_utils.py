@@ -57,8 +57,8 @@ def format_rich_text(rich_text_array: list[dict]) -> str:
         text = fragment.get("plain_text", "")
         anno = fragment.get("annotations", {})
 
-        if anno.get("underline"):
-            text = f"<u>{text}</u>"
+        if anno.get("bold"):
+            text = f"**{text}**"
 
         parts.append(text)
 
@@ -80,8 +80,8 @@ def get_page_content(title: str, count: int) -> list[str]:
         block_text = format_rich_text(text_items)
 
         if block_text:
-            if "<u>" not in block_text:
-                logger.warning(f"No underlined word found: {block_text}")
+            if "**" not in block_text:
+                logger.warning(f"No **bold** word found: {block_text}")
                 continue
             content_lines.append(block_text)
             if len(content_lines) == count:
@@ -89,7 +89,7 @@ def get_page_content(title: str, count: int) -> list[str]:
 
     if not content_lines:
         raise PageEmptyError(
-            f"Page '{title}' contains no usable content with <u>...</u>"
+            f"Page '{title}' contains no usable content with **bold** text."
         )
 
     return content_lines

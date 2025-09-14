@@ -21,16 +21,16 @@ class TranslationResponse(BaseModel):
 load_dotenv()
 
 _translation_instructions_template = """
-You are a professional translator. For each sentence provided in the input list (sentences are separated by newlines), identify the word wrapped in <u>...</u> tags. Translate that underlined word into natural {source_lang} in the context of the full sentence. If the word is a slang term, provide an equivalent slang term in {source_lang}. If a one-word translation is not possible, use multiple words or a short phrase that best captures the meaning. Always provide two similar translations for the underlined word, separated by a comma followed by a space (, ).
+You are a professional translator. For each sentence provided in the input list (sentences are separated by newlines), identify the word wrapped in **...** tags. Translate that bold word into natural {source_lang} in the context of the full sentence. If the word is a slang term, provide an equivalent slang term in {source_lang}. If a one-word translation is not possible, use multiple words or a short phrase that best captures the meaning. Always provide two similar translations for the bold word, separated by a comma followed by a space (, ), and ensure both translations are in lowercase.
 
-Also translate the entire sentence into {source_lang}, and wrap the translated word in <u>...</u> tags.
+Also translate the entire sentence into {source_lang}, and wrap the translated word in **...** tags.
 
 Your response must be a valid JSON object with a single property "translations", which is an array of objects. Each object must have the following properties:
 
 {{
-  "words_source": "first translation, second translation of the underlined word",
-  "sentence_source": "full translated sentence with <u>underlined word</u>",
-  "sentence_target": "original sentence with <u>underlined word</u>"
+  "words_source": "first translation, second translation of the **bold** word in lowercase",
+  "sentence_source": "full translated sentence with **bold** word",
+  "sentence_target": "original sentence with **bold** word"
 }}
 """.strip()
 
