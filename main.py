@@ -1,20 +1,16 @@
 import argparse
 import logging
-import sys
 import os
+import sys
 
 from generator import (
+    DeckGenerationError,
+    FlashcardGenerationError,
     generate_cloze_deck,
     generate_flashcards,
-    FlashcardGenerationError,
-    DeckGenerationError,
 )
 from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
-from translate_utils import (
-    TranslationError,
-    translate_sentences_chatgpt,
-    translate_sentences_gemini,
-)
+from translate_utils import TranslationError, translate_sentences
 
 
 def main() -> None:
@@ -67,9 +63,22 @@ def main() -> None:
         type=int,
         help="Maximum number of sentences to translate (default: 5)",
     )
+    parser.add_argument(
+        "-a",
+        "--api",
+        default="gemini",
+        type=str.lower,
+        choices=["gemini", "openai"],
+        help="LLM API to use: 'gemini' or 'openai' (default: gemini)",
+    )
     args = parser.parse_args()
 
-    source_lang, target_lang, sentence_count = args.source, args.target, args.count
+    source_lang, target_lang, sentence_count, api = (
+        args.source,
+        args.target,
+        args.count,
+        args.api,
+    )
     if source_lang not in LANGUAGE_CODE_MAP:
         logger.error(f"Unsupported source language: {source_lang}")
         sys.exit(1)
@@ -85,14 +94,16 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        translated_content = translate_sentences_gemini(content, source_lang)
+        translated_content = translate_sentences(
+            sentences=content, source_lang=source_lang, api=api
+        )
         logger.info("Translation completed successfully.")
     except TranslationError as e:
         logger.error(f"Translation failed: {e}")
         sys.exit(1)
 
     try:
-        flashcards = generate_flashcards(content, translated_content)
+        flashcards = generate_flashcards(translated_content)
         logger.info("Flashcards generated successfully.")
     except FlashcardGenerationError as e:
         logger.error(f"Flashcard generation failed: {e}")
