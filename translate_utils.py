@@ -1,3 +1,5 @@
+from typing import cast
+
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -37,18 +39,18 @@ def _build_instructions(source_lang: str) -> str:
     return _translation_instructions_template.format(source_lang=source_lang)
 
 
-def translate_sentences_chatgpt(
-    sentences: list[str], source_lang="Slovak"
+def translate_sentences(
+    sentences: list[str], source_lang: str = "English", api: str = "gemini"
 ) -> list[TranslationItem]:
-    """Translate sentence using ChatGPT."""
+    """Translate sentence using LLM."""
     if not sentences:
         raise TranslationError("No sentences provided for translation.")
     instructions = _build_instructions(source_lang)
     sentences_str = "\n".join(sentences)
 
-    from openai import OpenAI, OpenAIError
+    if api == "openai":
+        from openai import OpenAI
 
-    try:
         client = OpenAI()
         response = client.responses.parse(
             model="gpt-4o",
@@ -56,44 +58,35 @@ def translate_sentences_chatgpt(
             input=sentences_str,
             text_format=TranslationResponse,
         )
-    except OpenAIError as e:
-        try:
-            error_message = e.response.json()["error"]["message"]
-        except Exception:
-            error_message = str(e)
-        raise TranslationError(error_message) from e
 
-    if not response or not response.output_parsed:
-        raise TranslationError("Translation service returned empty output.")
+        parsed = response.output_parsed
+        if not parsed or not parsed.translations:
+            raise TranslationError("Translation service returned empty output.")
 
-    return response.output_parsed.translations
+        return parsed.translations
 
+    if api == "gemini":
+        from google import genai
+        from google.genai import types
 
-def translate_sentences_gemini(
-    sentences: list[str], source_lang="Slovak"
-) -> list[TranslationItem]:
-    """Translate sentence using Google Gemini."""
-    if not sentences:
-        raise TranslationError("No sentences provided for translation.")
-    instructions = _build_instructions(source_lang)
-    sentences_str = "\n".join(sentences)
+        client = genai.Client()
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=sentences_str,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                system_instruction=instructions,
+                response_mime_type="application/json",
+                response_schema=TranslationResponse,
+            ),
+        )
 
-    from google import genai
-    from google.genai import types
+        # Cast the response to the expected type (Gemini SDK doesn't
+        # provide precise typing for `.parsed`)
+        parsed = cast(TranslationResponse, response.parsed)
+        if not parsed or not parsed.translations:
+            raise TranslationError("Translation service returned empty output.")
 
-    client = genai.Client()
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=sentences_str,
-        config=types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
-            system_instruction=instructions,
-            response_mime_type="application/json",
-            response_schema=TranslationResponse,
-        ),
-    )
+        return parsed.translations
 
-    if not response or not response.parsed:
-        raise TranslationError("Translation service returned empty output.")
-
-    return response.parsed.translations
+    raise TranslationError(f"Unsupported translation API: {api}")
