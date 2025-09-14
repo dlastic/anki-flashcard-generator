@@ -1,13 +1,14 @@
 from unittest.mock import patch
+
 import pytest
 
 from notion_utils import (
+    PageEmptyError,
+    PageNotFoundError,
     extract_page_title,
     format_rich_text,
     get_page_content,
     get_page_id,
-    PageEmptyError,
-    PageNotFoundError,
 )
 
 DUMMY_PAGE_ID = "1234abcd5678efgh"
@@ -128,7 +129,7 @@ def test_get_page_content_empty_blocks():
             return_value=mock_blocks_response,
         ):
             with pytest.raises(PageEmptyError):
-                result = get_page_content("Page With Empty Block", count=1)
+                get_page_content("Page With Empty Block", count=1)
 
 
 def test_get_page_content_respects_count_limit():
