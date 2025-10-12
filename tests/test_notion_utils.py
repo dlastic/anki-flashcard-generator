@@ -75,12 +75,12 @@ def test_get_page_id_no_match():
 
 def test_format_rich_text_basic():
     mock_rich_text = [
-        {"plain_text": "Hello ", "annotations": {"underline": False}},
-        {"plain_text": "World", "annotations": {"underline": True}},
+        {"plain_text": "Hello ", "annotations": {"bold": False}},
+        {"plain_text": "World", "annotations": {"bold": True}},
     ]
 
     result = format_rich_text(mock_rich_text)
-    assert result == "Hello <u>World</u>"
+    assert result == "Hello **World**"
 
 
 def test_format_rich_text_empty():
@@ -92,8 +92,8 @@ def test_format_rich_text_empty():
 
 def test_format_rich_text_no_annotations():
     mock_rich_text = [
-        {"plain_text": "Just text without ", "annotations": {"underline": False}},
-        {"plain_text": "formatting", "annotations": {"underline": False}},
+        {"plain_text": "Just text without ", "annotations": {"bold": False}},
+        {"plain_text": "formatting", "annotations": {"bold": False}},
     ]
 
     result = format_rich_text(mock_rich_text)
@@ -117,7 +117,7 @@ def test_get_page_content_empty_blocks():
                 "type": "paragraph",
                 "paragraph": {
                     "rich_text": [
-                        {"plain_text": "Only line", "annotations": {"underline": False}}
+                        {"plain_text": "Only line", "annotations": {"bold": False}}
                     ]
                 },
             },
@@ -139,7 +139,7 @@ def test_get_page_content_respects_count_limit():
                 "type": "paragraph",
                 "paragraph": {
                     "rich_text": [
-                        {"plain_text": "First", "annotations": {"underline": True}}
+                        {"plain_text": "First", "annotations": {"bold": True}}
                     ]
                 },
             },
@@ -147,7 +147,7 @@ def test_get_page_content_respects_count_limit():
                 "type": "paragraph",
                 "paragraph": {
                     "rich_text": [
-                        {"plain_text": "Second", "annotations": {"underline": True}}
+                        {"plain_text": "Second", "annotations": {"bold": True}}
                     ]
                 },
             },
@@ -155,7 +155,7 @@ def test_get_page_content_respects_count_limit():
                 "type": "paragraph",
                 "paragraph": {
                     "rich_text": [
-                        {"plain_text": "Third", "annotations": {"underline": True}}
+                        {"plain_text": "Third", "annotations": {"bold": True}}
                     ]
                 },
             },
@@ -168,10 +168,10 @@ def test_get_page_content_respects_count_limit():
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Limited Page", count=2)
-            assert result == ["<u>First</u>", "<u>Second</u>"]
+            assert result == ["**First**", "**Second**"]
 
 
-def test_get_page_content_skips_non_underlined():
+def test_get_page_content_skips_non_bolded():
     mock_blocks_response = {
         "results": [
             {
@@ -179,8 +179,8 @@ def test_get_page_content_skips_non_underlined():
                 "paragraph": {
                     "rich_text": [
                         {
-                            "plain_text": "No underline",
-                            "annotations": {"underline": False},
+                            "plain_text": "No bold",
+                            "annotations": {"bold": False},
                         }
                     ]
                 },
@@ -190,8 +190,8 @@ def test_get_page_content_skips_non_underlined():
                 "paragraph": {
                     "rich_text": [
                         {
-                            "plain_text": "Yes underline",
-                            "annotations": {"underline": True},
+                            "plain_text": "Yes bold",
+                            "annotations": {"bold": True},
                         }
                     ]
                 },
@@ -205,17 +205,17 @@ def test_get_page_content_skips_non_underlined():
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Mixed Page", count=1)
-            assert result == ["<u>Yes underline</u>"]
+            assert result == ["**Yes bold**"]
 
 
-def test_get_page_content_fewer_underlined_than_count():
+def test_get_page_content_fewer_bolded_than_count():
     mock_blocks_response = {
         "results": [
             {
                 "type": "paragraph",
                 "paragraph": {
                     "rich_text": [
-                        {"plain_text": "One", "annotations": {"underline": True}}
+                        {"plain_text": "One", "annotations": {"bold": True}}
                     ]
                 },
             }
@@ -228,4 +228,4 @@ def test_get_page_content_fewer_underlined_than_count():
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Short Page", count=3)
-            assert result == ["<u>One</u>"]
+            assert result == ["**One**"]

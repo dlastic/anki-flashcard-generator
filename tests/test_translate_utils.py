@@ -11,15 +11,15 @@ from translate_utils import (
 
 
 def test_translate_sentences_openai_success():
-    sentences = ["This is a <u>test</u> sentence."]
+    sentences = ["This is a **test** sentence."]
 
     mock_response = MagicMock()
     mock_response.output_parsed = TranslationResponse(
         translations=[
             TranslationItem(
                 words_source="test1, test2",
-                sentence_source="Toto je <u>testovacia</u> veta.",
-                sentence_target="This is a <u>test</u> sentence.",
+                sentence_source="Toto je **testovacia** veta.",
+                sentence_target="This is a **test** sentence.",
             )
         ]
     )
@@ -34,11 +34,11 @@ def test_translate_sentences_openai_success():
 
     assert isinstance(result, list)
     assert result[0].words_source == "test1, test2"
-    assert result[0].sentence_source == "Toto je <u>testovacia</u> veta."
+    assert result[0].sentence_source == "Toto je **testovacia** veta."
 
 
 def test_translate_sentences_openai_empty_output():
-    sentences = ["Test <u>word</u>"]
+    sentences = ["Test **word**"]
 
     mock_response = MagicMock()
     mock_response.output_parsed = TranslationResponse(translations=[])
@@ -52,15 +52,15 @@ def test_translate_sentences_openai_empty_output():
 
 
 def test_translate_sentences_gemini_success():
-    sentences = ["This is a <u>test</u> sentence."]
+    sentences = ["This is a **test** sentence."]
 
     mock_response = MagicMock()
     mock_response.parsed = TranslationResponse(
         translations=[
             TranslationItem(
                 words_source="test1, test2",
-                sentence_source="Toto je <u>testovacia</u> veta.",
-                sentence_target="This is a <u>test</u> sentence.",
+                sentence_source="Toto je **testovacia** veta.",
+                sentence_target="This is a **test** sentence.",
             )
         ]
     )
@@ -75,11 +75,11 @@ def test_translate_sentences_gemini_success():
 
     assert isinstance(result, list)
     assert result[0].words_source == "test1, test2"
-    assert result[0].sentence_source == "Toto je <u>testovacia</u> veta."
+    assert result[0].sentence_source == "Toto je **testovacia** veta."
 
 
 def test_translate_sentences_gemini_empty_output():
-    sentences = ["Test <u>word</u>"]
+    sentences = ["Test **word**"]
 
     mock_response = MagicMock()
     mock_response.parsed = TranslationResponse(translations=[])
