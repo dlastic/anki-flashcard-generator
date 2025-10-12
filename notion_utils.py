@@ -1,8 +1,8 @@
-import logging
 import os
 from typing import cast
 
 from dotenv import load_dotenv
+from loguru import logger
 from notion_client import Client
 
 
@@ -14,7 +14,6 @@ class PageEmptyError(Exception):
     pass
 
 
-logger = logging.getLogger(__name__)
 load_dotenv()
 notion = Client(auth=os.getenv("NOTION_API_KEY"))
 

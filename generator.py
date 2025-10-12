@@ -1,7 +1,7 @@
-import logging
 import re
 
 import genanki
+from loguru import logger
 
 from translate_utils import TranslationItem
 
@@ -12,9 +12,6 @@ class FlashcardGenerationError(Exception):
 
 class DeckGenerationError(Exception):
     pass
-
-
-logger = logging.getLogger(__name__)
 
 
 def convert_bold_text(sentence: str, format_type: str) -> str:

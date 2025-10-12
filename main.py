@@ -1,7 +1,8 @@
 import argparse
-import logging
 import os
 import sys
+
+from loguru import logger
 
 from generator import (
     DeckGenerationError,
@@ -36,10 +37,13 @@ def main() -> None:
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, OUTPUT_FILENAME)
 
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s"
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        level="INFO",
+        colorize=True,
     )
-    logger = logging.getLogger()
 
     parser = argparse.ArgumentParser(description="Language description")
     parser.add_argument(
