@@ -4,47 +4,8 @@ import sys
 
 from loguru import logger
 
-from generator import (
-    DeckGenerationError,
-    FlashcardGenerationError,
-    generate_cloze_deck,
-    generate_flashcards,
-)
-from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
-from translate_utils import TranslationError, translate_sentences
 
-
-def main() -> None:
-    """Generate anki cloze deck from sentences in the Notion page."""
-
-    LANGUAGE_DECK_MAP = {
-        "EN": "01_Languages::01_English",
-        "FR": "01_Languages::02_Français",
-        "RU": "01_Languages::03_Русский",
-        "DE": "01_Languages::04_Deutsch",
-        "IT": "01_Languages::05_Italiano",
-        "FA": "01_Languages::06_Farsi",
-        "ES": "01_Languages::07_Español",
-    }
-
-    LANGUAGE_CODE_MAP = {
-        "EN": "English",
-        "SK": "Slovak",
-    }
-
-    OUTPUT_FILENAME = "flashcard_deck.apkg"
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, OUTPUT_FILENAME)
-
-    logger.remove()
-    logger.add(
-        sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-        level="INFO",
-        colorize=True,
-    )
-
+def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Language description")
     parser.add_argument(
         "-s",
@@ -75,7 +36,42 @@ def main() -> None:
         choices=["gemini", "openai"],
         help="LLM API to use: 'gemini' or 'openai' (default: gemini)",
     )
+    return parser
+
+
+def main() -> None:
+    """Generate anki cloze deck from sentences in the Notion page."""
+
+    LANGUAGE_DECK_MAP = {
+        "EN": "01_Languages::01_English",
+        "FR": "01_Languages::02_Français",
+        "RU": "01_Languages::03_Русский",
+        "DE": "01_Languages::04_Deutsch",
+        "IT": "01_Languages::05_Italiano",
+        "FA": "01_Languages::06_Farsi",
+        "ES": "01_Languages::07_Español",
+    }
+
+    LANGUAGE_CODE_MAP = {
+        "EN": "English",
+        "SK": "Slovak",
+    }
+
+    OUTPUT_FILENAME = "flashcard_deck.apkg"
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = os.path.join(output_dir, OUTPUT_FILENAME)
+
+    parser = build_argument_parser()
     args = parser.parse_args()
+
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+        level="INFO",
+        colorize=True,
+    )
 
     source_lang, target_lang, sentence_count, api = (
         args.source,
@@ -90,9 +86,18 @@ def main() -> None:
         logger.error(f"Unsupported target language: {target_lang}")
         sys.exit(1)
 
+    from generator import (
+        DeckGenerationError,
+        FlashcardGenerationError,
+        generate_cloze_deck,
+        generate_flashcards,
+    )
+    from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
+    from translate_utils import TranslationError, translate_sentences
+
     try:
         content = get_page_content(target_lang, sentence_count)
-        logger.info("Page content loaded successfully.")
+        logger.success("Page content loaded successfully.")
     except (PageNotFoundError, PageEmptyError) as e:
         logger.error(str(e))
         sys.exit(1)
@@ -101,21 +106,21 @@ def main() -> None:
         translated_content = translate_sentences(
             sentences=content, source_lang=source_lang, api=api
         )
-        logger.info("Translation completed successfully.")
+        logger.success("Translation completed successfully.")
     except TranslationError as e:
         logger.error(f"Translation failed: {e}")
         sys.exit(1)
 
     try:
         flashcards = generate_flashcards(translated_content)
-        logger.info("Flashcards generated successfully.")
+        logger.success("Flashcards generated successfully.")
     except FlashcardGenerationError as e:
         logger.error(f"Flashcard generation failed: {e}")
         sys.exit(1)
 
     try:
         generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
-        logger.info(f"Anki cloze deck generated successfully at: {output_path}")
+        logger.success(f"Anki cloze deck generated successfully at: {output_path}")
     except DeckGenerationError as e:
         logger.error(str(e))
         sys.exit(1)
