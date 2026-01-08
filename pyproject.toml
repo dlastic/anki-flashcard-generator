@@ -1,5 +1,5 @@
 [project]
-name = "anki-flashcard-generator"
+name = "flashcards"
 version = "0.1.0"
 description = "CLI tool for generating Anki flashcards from Notion using generative AI"
 readme = "README.md"
@@ -12,5 +12,17 @@ dependencies = [
     "notion-client>=2.5.0",
     "openai>=1.107.2",
     "pydantic>=2.11.9",
-    "pytest>=8.4.2",
 ]
+
+[dependency-groups]
+dev = ["pytest>=9.0.2"]
+
+[project.scripts]
+anki = "flashcards.main:main"
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.pytest]
+addopts = ["--import-mode=importlib"]

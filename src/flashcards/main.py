@@ -58,7 +58,7 @@ def main() -> None:
     }
 
     OUTPUT_FILENAME = "flashcard_deck.apkg"
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    output_dir = os.path.join(os.getcwd(), "output")
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, OUTPUT_FILENAME)
 
@@ -86,14 +86,14 @@ def main() -> None:
         logger.error(f"Unsupported target language: {target_lang}")
         sys.exit(1)
 
-    from generator import (
+    from .generator import (
         DeckGenerationError,
         FlashcardGenerationError,
         generate_cloze_deck,
         generate_flashcards,
     )
-    from notion_utils import PageEmptyError, PageNotFoundError, get_page_content
-    from translate_utils import TranslationError, translate_sentences
+    from .notion_utils import PageEmptyError, PageNotFoundError, get_page_content
+    from .translate_utils import TranslationError, translate_sentences
 
     try:
         content = get_page_content(target_lang, sentence_count)

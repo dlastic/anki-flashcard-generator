@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from translate_utils import (
+from flashcards.translate_utils import (
     TranslationError,
     TranslationItem,
     TranslationResponse,

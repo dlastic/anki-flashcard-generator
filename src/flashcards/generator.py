@@ -3,7 +3,7 @@ import re
 import genanki
 from loguru import logger
 
-from translate_utils import TranslationItem
+from .translate_utils import TranslationItem
 
 
 class FlashcardGenerationError(Exception):

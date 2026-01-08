@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from notion_utils import (
+from flashcards.notion_utils import (
     PageEmptyError,
     PageNotFoundError,
     extract_page_title,
@@ -51,7 +51,7 @@ def test_get_page_id_exact_match():
         ]
     }
 
-    with patch("notion_utils.notion.search", return_value=mock_response):
+    with patch("flashcards.notion_utils.notion.search", return_value=mock_response):
         result = get_page_id("My Test Page")
         assert result == DUMMY_PAGE_ID
 
@@ -68,7 +68,7 @@ def test_get_page_id_no_match():
         ]
     }
 
-    with patch("notion_utils.notion.search", return_value=mock_response):
+    with patch("flashcards.notion_utils.notion.search", return_value=mock_response):
         result = get_page_id("Nonexistent Page")
         assert result is None
 
@@ -101,7 +101,7 @@ def test_format_rich_text_no_annotations():
 
 
 def test_get_page_content_missing_page():
-    with patch("notion_utils.get_page_id", return_value=None):
+    with patch("flashcards.notion_utils.get_page_id", return_value=None):
         with pytest.raises(PageNotFoundError):
             get_page_content("Missing Page", count=1)
 
@@ -123,9 +123,9 @@ def test_get_page_content_empty_blocks():
             },
         ]
     }
-    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+    with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
         with patch(
-            "notion_utils.notion.blocks.children.list",
+            "flashcards.notion_utils.notion.blocks.children.list",
             return_value=mock_blocks_response,
         ):
             with pytest.raises(PageEmptyError):
@@ -162,9 +162,9 @@ def test_get_page_content_respects_count_limit():
         ]
     }
 
-    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+    with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
         with patch(
-            "notion_utils.notion.blocks.children.list",
+            "flashcards.notion_utils.notion.blocks.children.list",
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Limited Page", count=2)
@@ -199,9 +199,9 @@ def test_get_page_content_skips_non_bolded():
         ]
     }
 
-    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+    with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
         with patch(
-            "notion_utils.notion.blocks.children.list",
+            "flashcards.notion_utils.notion.blocks.children.list",
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Mixed Page", count=1)
@@ -214,17 +214,15 @@ def test_get_page_content_fewer_bolded_than_count():
             {
                 "type": "paragraph",
                 "paragraph": {
-                    "rich_text": [
-                        {"plain_text": "One", "annotations": {"bold": True}}
-                    ]
+                    "rich_text": [{"plain_text": "One", "annotations": {"bold": True}}]
                 },
             }
         ]
     }
 
-    with patch("notion_utils.get_page_id", return_value="dummy_id"):
+    with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
         with patch(
-            "notion_utils.notion.blocks.children.list",
+            "flashcards.notion_utils.notion.blocks.children.list",
             return_value=mock_blocks_response,
         ):
             result = get_page_content("Short Page", count=3)
