@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -40,7 +40,8 @@ def test_extract_page_title_missing_or_empty_properties():
 
 
 def test_get_page_id_exact_match():
-    mock_response = {
+    mock_client = MagicMock()
+    mock_client.search.return_value = {
         "results": [
             {
                 "id": DUMMY_PAGE_ID,
@@ -51,13 +52,14 @@ def test_get_page_id_exact_match():
         ]
     }
 
-    with patch("flashcards.notion_utils.notion.search", return_value=mock_response):
-        result = get_page_id("My Test Page")
-        assert result == DUMMY_PAGE_ID
+    result = get_page_id(mock_client, "My Test Page")
+    assert result == DUMMY_PAGE_ID
+    mock_client.search.assert_called_once()
 
 
 def test_get_page_id_no_match():
-    mock_response = {
+    mock_client = MagicMock()
+    mock_client.search.return_value = {
         "results": [
             {
                 "id": "irrelevant-id",
@@ -68,9 +70,9 @@ def test_get_page_id_no_match():
         ]
     }
 
-    with patch("flashcards.notion_utils.notion.search", return_value=mock_response):
-        result = get_page_id("Nonexistent Page")
-        assert result is None
+    result = get_page_id(mock_client, "Nonexistent Page")
+    assert result is None
+    mock_client.search.assert_called_once()
 
 
 def test_format_rich_text_basic():
@@ -101,13 +103,15 @@ def test_format_rich_text_no_annotations():
 
 
 def test_get_page_content_missing_page():
+    mock_client = MagicMock()
     with patch("flashcards.notion_utils.get_page_id", return_value=None):
         with pytest.raises(PageNotFoundError):
-            get_page_content("Missing Page", count=1)
+            get_page_content(mock_client, "Missing Page", count=1)
 
 
 def test_get_page_content_empty_blocks():
-    mock_blocks_response = {
+    mock_client = MagicMock()
+    mock_client.blocks.children.list.return_value = {
         "results": [
             {
                 "type": "paragraph",
@@ -124,16 +128,13 @@ def test_get_page_content_empty_blocks():
         ]
     }
     with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
-        with patch(
-            "flashcards.notion_utils.notion.blocks.children.list",
-            return_value=mock_blocks_response,
-        ):
-            with pytest.raises(PageEmptyError):
-                get_page_content("Page With Empty Block", count=1)
+        with pytest.raises(PageEmptyError):
+            get_page_content(mock_client, "Page With Empty Block", count=1)
 
 
 def test_get_page_content_respects_count_limit():
-    mock_blocks_response = {
+    mock_client = MagicMock()
+    mock_client.blocks.children.list.return_value = {
         "results": [
             {
                 "type": "paragraph",
@@ -163,16 +164,13 @@ def test_get_page_content_respects_count_limit():
     }
 
     with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
-        with patch(
-            "flashcards.notion_utils.notion.blocks.children.list",
-            return_value=mock_blocks_response,
-        ):
-            result = get_page_content("Limited Page", count=2)
-            assert result == ["**First**", "**Second**"]
+        result = get_page_content(mock_client, "Limited Page", count=2)
+        assert result == ["**First**", "**Second**"]
 
 
 def test_get_page_content_skips_non_bolded():
-    mock_blocks_response = {
+    mock_client = MagicMock()
+    mock_client.blocks.children.list.return_value = {
         "results": [
             {
                 "type": "paragraph",
@@ -200,16 +198,13 @@ def test_get_page_content_skips_non_bolded():
     }
 
     with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
-        with patch(
-            "flashcards.notion_utils.notion.blocks.children.list",
-            return_value=mock_blocks_response,
-        ):
-            result = get_page_content("Mixed Page", count=1)
-            assert result == ["**Yes bold**"]
+        result = get_page_content(mock_client, "Mixed Page", count=1)
+        assert result == ["**Yes bold**"]
 
 
 def test_get_page_content_fewer_bolded_than_count():
-    mock_blocks_response = {
+    mock_client = MagicMock()
+    mock_client.blocks.children.list.return_value = {
         "results": [
             {
                 "type": "paragraph",
@@ -221,9 +216,5 @@ def test_get_page_content_fewer_bolded_than_count():
     }
 
     with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
-        with patch(
-            "flashcards.notion_utils.notion.blocks.children.list",
-            return_value=mock_blocks_response,
-        ):
-            result = get_page_content("Short Page", count=3)
-            assert result == ["**One**"]
+        result = get_page_content(mock_client, "Short Page", count=3)
+        assert result == ["**One**"]
