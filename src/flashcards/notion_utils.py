@@ -15,7 +15,14 @@ class PageEmptyError(Exception):
 
 
 load_dotenv()
-notion = Client(auth=os.getenv("NOTION_API_KEY"))
+
+
+def get_notion_client() -> Client:
+    """Initialize and return a Notion API client."""
+    api_key = os.getenv("NOTION_API_KEY")
+    if api_key is None:
+        raise ValueError("NOTION_API_KEY environment variable is not set.")
+    return Client(auth=api_key)
 
 
 def extract_page_title(result: dict) -> str | None:
@@ -29,11 +36,11 @@ def extract_page_title(result: dict) -> str | None:
     return None
 
 
-def get_page_id(title: str) -> str | None:
+def get_page_id(notion_client: Client, title: str) -> str | None:
     """Search for a page by title using Notion API."""
     response = cast(
         dict,
-        notion.search(
+        notion_client.search(
             query=title,
             sort={"direction": "ascending", "timestamp": "last_edited_time"},
             filter={"value": "page", "property": "object"},
@@ -64,13 +71,13 @@ def format_rich_text(rich_text_array: list[dict]) -> str:
     return "".join(parts)
 
 
-def get_page_content(title: str, count: int) -> list[str]:
+def get_page_content(notion_client: Client, title: str, count: int = 5) -> list[str]:
     """Return plain text content lines of a Notion page by its title."""
-    page_id = get_page_id(title)
+    page_id = get_page_id(notion_client, title)
     if not page_id:
         raise PageNotFoundError(f"No Notion page found with title: {title}")
 
-    response = cast(dict, notion.blocks.children.list(block_id=page_id))
+    response = cast(dict, notion_client.blocks.children.list(block_id=page_id))
 
     content_lines = []
     for block in response.get("results", []):
