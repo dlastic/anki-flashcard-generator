@@ -92,13 +92,13 @@ def main() -> None:
         generate_cloze_deck,
         generate_flashcards,
     )
-    from .notion_utils import (
+    from .notion import (
         PageEmptyError,
         PageNotFoundError,
         get_notion_client,
         get_page_content,
     )
-    from .translate_utils import TranslationError, translate_sentences
+    from .translation import TranslationError, translate_sentences
 
     try:
         notion_client = get_notion_client()

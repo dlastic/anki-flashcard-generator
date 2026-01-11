@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flashcards.notion_utils import (
+from flashcards.notion import (
     PageEmptyError,
     PageNotFoundError,
     extract_page_title,
@@ -125,7 +125,7 @@ class TestGetPageID:
 class TestGetPageContent:
     def test_missing_page(self):
         mock_client = MagicMock()
-        with patch("flashcards.notion_utils.get_page_id", return_value=None):
+        with patch("flashcards.notion.get_page_id", return_value=None):
             with pytest.raises(PageNotFoundError):
                 get_page_content(mock_client, "Missing Page", count=1)
 
@@ -147,7 +147,7 @@ class TestGetPageContent:
                 },
             ]
         }
-        with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
+        with patch("flashcards.notion.get_page_id", return_value="dummy_id"):
             with pytest.raises(PageEmptyError):
                 get_page_content(mock_client, "Page With Empty Block", count=1)
 
@@ -181,7 +181,7 @@ class TestGetPageContent:
                 },
             ]
         }
-        with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
+        with patch("flashcards.notion.get_page_id", return_value="dummy_id"):
             result = get_page_content(mock_client, "Limited Page", count=2)
             assert result == ["**First**", "**Second**"]
 
@@ -213,7 +213,7 @@ class TestGetPageContent:
                 },
             ]
         }
-        with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
+        with patch("flashcards.notion.get_page_id", return_value="dummy_id"):
             result = get_page_content(mock_client, "Mixed Page", count=1)
             assert result == ["**Yes bold**"]
 
@@ -231,6 +231,6 @@ class TestGetPageContent:
                 }
             ]
         }
-        with patch("flashcards.notion_utils.get_page_id", return_value="dummy_id"):
+        with patch("flashcards.notion.get_page_id", return_value="dummy_id"):
             result = get_page_content(mock_client, "Short Page", count=3)
             assert result == ["**One**"]

@@ -1,6 +1,6 @@
 import pytest
 
-from flashcards.notion_utils import (
+from flashcards.notion import (
     PageEmptyError,
     get_notion_client,
     get_page_content,
