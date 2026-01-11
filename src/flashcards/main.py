@@ -92,14 +92,25 @@ def main() -> None:
         generate_cloze_deck,
         generate_flashcards,
     )
-    from .notion_utils import PageEmptyError, PageNotFoundError, get_page_content
+    from .notion_utils import (
+        PageEmptyError,
+        PageNotFoundError,
+        get_notion_client,
+        get_page_content,
+    )
     from .translate_utils import TranslationError, translate_sentences
 
     try:
-        content = get_page_content(target_lang, sentence_count)
+        notion_client = get_notion_client()
+    except ValueError as e:
+        logger.error(f"Failed to initialize Notion client: {e}")
+        sys.exit(1)
+
+    try:
+        content = get_page_content(notion_client, target_lang, sentence_count)
         logger.success("Page content loaded successfully.")
     except (PageNotFoundError, PageEmptyError) as e:
-        logger.error(str(e))
+        logger.error(f"Failed to get page content: {e}")
         sys.exit(1)
 
     try:
