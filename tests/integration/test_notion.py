@@ -3,6 +3,7 @@ import pytest
 from flashcards.notion import (
     AmbiguousTitleError,
     PageEmptyError,
+    PageNotFoundError,
     get_notion_client,
     get_page_content,
     get_page_id,
@@ -23,6 +24,9 @@ class TestGetPageID:
         with pytest.raises(AmbiguousTitleError):
             get_page_id(notion_client, "Common Title")
 
+    def test_missing_page(self, notion_client):
+        assert get_page_id(notion_client, "Nonexistent Page") is None
+
 
 class TestGetPageContent:
     def test_empty_page(self, notion_client):
@@ -32,3 +36,7 @@ class TestGetPageContent:
     def test_non_empty_page(self, notion_client):
         content = get_page_content(notion_client, "test_page_non_empty")
         assert len(content) > 0
+
+    def test_missing_page(self, notion_client):
+        with pytest.raises(PageNotFoundError):
+            get_page_content(notion_client, "Nonexistent Page")
