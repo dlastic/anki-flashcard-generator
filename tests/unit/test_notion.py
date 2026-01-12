@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from flashcards.notion import (
+    AmbiguousTitleError,
     PageEmptyError,
     PageNotFoundError,
     extract_page_title,
@@ -119,6 +120,42 @@ class TestGetPageID:
 
         result = get_page_id(mock_client, "Nonexistent Page")
         assert result is None
+        mock_client.search.assert_called_once()
+
+    def test_ambiguous_title(self):
+        mock_client = MagicMock()
+        mock_client.search.return_value = {
+            "results": [
+                {
+                    "id": "id-1",
+                    "properties": {
+                        "title": {
+                            "type": "title",
+                            "title": [
+                                {
+                                    "plain_text": "Common Title",
+                                },
+                            ],
+                        }
+                    },
+                },
+                {
+                    "id": "id-2",
+                    "properties": {
+                        "title": {
+                            "type": "title",
+                            "title": [
+                                {
+                                    "plain_text": "Common Title",
+                                },
+                            ],
+                        }
+                    },
+                },
+            ]
+        }
+        with pytest.raises(AmbiguousTitleError):
+            get_page_id(mock_client, "Common Title")
         mock_client.search.assert_called_once()
 
 

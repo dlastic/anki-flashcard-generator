@@ -13,6 +13,10 @@ class PageEmptyError(Exception):
     pass
 
 
+class AmbiguousTitleError(Exception):
+    pass
+
+
 load_dotenv()
 
 
@@ -52,12 +56,18 @@ def get_page_id(notion_client: Client, title: str) -> str | None:
         filter={"value": "page", "property": "object"},
     )
 
+    matching_results = []
     for result in response["results"]:  # ty:ignore[not-subscriptable]
         result_title = extract_page_title(result)
         if title == result_title:
-            return result["id"]
+            matching_results.append(result["id"])
 
-    return None
+    if len(matching_results) > 1:
+        raise AmbiguousTitleError(
+            f"Multiple Notion pages found with title: {title}. Please ensure titles are unique."
+        )
+
+    return matching_results[0] if matching_results else None
 
 
 def get_page_content(notion_client: Client, title: str, count: int = 5) -> list[str]:
