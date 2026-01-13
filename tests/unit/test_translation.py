@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -6,99 +6,58 @@ from flashcards.translation import (
     TranslationError,
     TranslationItem,
     TranslationResponse,
+    _GeminiAdapter,
+    _get_adapter,
+    _OpenAIAdapter,
     translate_sentences,
 )
 
 
-def test_translate_sentences_openai_success():
-    sentences = ["This is a **test** sentence."]
-
-    mock_response = MagicMock()
-    mock_response.output_parsed = TranslationResponse(
-        translations=[
-            TranslationItem(
-                words_source="test1, test2",
-                sentence_source="Toto je **testovacia** veta.",
-                sentence_target="This is a **test** sentence.",
-            )
-        ]
+class TestGetAdapter:
+    @pytest.mark.parametrize(
+        "api, expected_class, model",
+        [
+            ("openai", _OpenAIAdapter, "gpt-4"),
+            ("openai", _OpenAIAdapter, None),
+            ("gemini", _GeminiAdapter, "gemini-2.5-flash"),
+            ("gemini", _GeminiAdapter, None),
+        ],
     )
+    def test_get_adapter(self, api, expected_class, model):
+        adapter = _get_adapter(api, model=model)
+        assert isinstance(adapter, expected_class)
+        assert adapter.model == model
 
-    with patch("openai.OpenAI") as MockOpenAI:
-        mock_client = MockOpenAI.return_value
-        mock_client.responses.parse.return_value = mock_response
+    def test_raises_on_unsupported_adapter(self):
+        with pytest.raises(TranslationError, match="Unsupported translation API"):
+            _get_adapter("nonexistent")
 
-        result = translate_sentences(
-            sentences=sentences, source_lang="Slovak", api="openai"
+
+class TestTranslateSentences:
+    def test_returns_translations(self):
+        mock_sentences = ["This is a **test** sentence."]
+        mock_translation = TranslationItem(
+            words_source="test1, test2",
+            sentence_source="Toto je **testovacia** veta.",
+            sentence_target="This is a **test** sentence.",
         )
+        mock_response = TranslationResponse(translations=[mock_translation])
 
-    assert isinstance(result, list)
-    assert result[0].words_source == "test1, test2"
-    assert result[0].sentence_source == "Toto je **testovacia** veta."
+        with patch("flashcards.translation._GeminiAdapter.generate", return_value=mock_response):  # fmt: skip
+            result = translate_sentences(sentences=mock_sentences, source_lang="Slovak")
+        translation = result[0]
 
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert isinstance(translation, TranslationItem)
+        assert translation.words_source == "test1, test2"
+        assert translation.sentence_source == "Toto je **testovacia** veta."
+        assert translation.sentence_target == "This is a **test** sentence."
 
-def test_translate_sentences_openai_empty_output():
-    sentences = ["Test **word**"]
+    def test_raises_on_empty_input(self):
+        with pytest.raises(TranslationError, match="No sentences provided"):
+            translate_sentences(sentences=[])
 
-    mock_response = MagicMock()
-    mock_response.output_parsed = TranslationResponse(translations=[])
-
-    with patch("openai.OpenAI") as MockOpenAI:
-        mock_client = MockOpenAI.return_value
-        mock_client.responses.parse.return_value = mock_response
-
-        with pytest.raises(TranslationError, match="empty output"):
-            translate_sentences(sentences=sentences, api="openai")
-
-
-def test_translate_sentences_gemini_success():
-    sentences = ["This is a **test** sentence."]
-
-    mock_response = MagicMock()
-    mock_response.parsed = TranslationResponse(
-        translations=[
-            TranslationItem(
-                words_source="test1, test2",
-                sentence_source="Toto je **testovacia** veta.",
-                sentence_target="This is a **test** sentence.",
-            )
-        ]
-    )
-
-    with patch("google.genai.Client") as MockGenaiClient:
-        mock_client = MockGenaiClient.return_value
-        mock_client.models.generate_content.return_value = mock_response
-
-        result = translate_sentences(
-            sentences=sentences, source_lang="Slovak", api="gemini"
-        )
-
-    assert isinstance(result, list)
-    assert result[0].words_source == "test1, test2"
-    assert result[0].sentence_source == "Toto je **testovacia** veta."
-
-
-def test_translate_sentences_gemini_empty_output():
-    sentences = ["Test **word**"]
-
-    mock_response = MagicMock()
-    mock_response.parsed = TranslationResponse(translations=[])
-
-    with patch("google.genai.Client") as MockGenaiClient:
-        mock_client = MockGenaiClient.return_value
-        mock_client.models.generate_content.return_value = mock_response
-
-        with pytest.raises(TranslationError, match="empty output"):
-            translate_sentences(sentences=sentences, api="gemini")
-
-
-def test_translate_sentences_empty_sentences():
-    with pytest.raises(
-        TranslationError, match="No sentences provided for translation."
-    ):
-        translate_sentences(sentences=[])
-
-
-def test_translate_sentences_unsupported_api():
-    with pytest.raises(TranslationError, match="Unsupported translation API"):
-        translate_sentences(sentences=["Test"], api="unsupported")
+    def test_raises_on_unsupported_api(self):
+        with pytest.raises(TranslationError, match="Unsupported translation API"):
+            translate_sentences(sentences=["Test"], api="unsupported")
