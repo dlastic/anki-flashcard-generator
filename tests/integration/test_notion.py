@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from flashcards.notion import (
@@ -8,6 +10,13 @@ from flashcards.notion import (
     get_page_content,
     get_page_id,
 )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def check_api_key():
+    api_key = os.getenv("NOTION_API_KEY")
+    if api_key is None:
+        pytest.exit("Missing NOTION_API_KEY")
 
 
 @pytest.fixture(scope="module")
