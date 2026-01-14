@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 
+from dotenv import load_dotenv
 from loguru import logger
 
 
@@ -64,6 +65,7 @@ def main() -> None:
 
     parser = build_argument_parser()
     args = parser.parse_args()
+    load_dotenv()
 
     logger.remove()
     logger.add(
@@ -115,7 +117,9 @@ def main() -> None:
 
     try:
         translated_content = translate_sentences(
-            sentences=content, source_lang=source_lang, api=api
+            sentences=content,
+            source_lang=source_lang,
+            api=api,
         )
         logger.success("Translation completed successfully.")
     except TranslationError as e:

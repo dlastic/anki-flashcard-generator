@@ -1,6 +1,5 @@
 import os
 
-from dotenv import load_dotenv
 from loguru import logger
 from notion_client import Client
 
@@ -15,9 +14,6 @@ class PageEmptyError(Exception):
 
 class AmbiguousTitleError(Exception):
     pass
-
-
-load_dotenv()
 
 
 def get_notion_client() -> Client:
