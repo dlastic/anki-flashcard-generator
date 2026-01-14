@@ -69,7 +69,7 @@ class _GeminiAdapter(_LLMAdapter):
         try:
             client = genai.Client(api_key=GEMINI_API_KEY)
             response = client.models.generate_content(
-                model=self.model or "gemini-2.5-flash",
+                model=self.model or "gemini-3-flash-preview",
                 contents=input_text,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
