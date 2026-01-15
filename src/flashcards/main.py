@@ -1,34 +1,13 @@
-import os
 import sys
 
 from loguru import logger
 
 from .cli import build_argument_parser, load_environment, setup_logger
+from .config import LANGUAGE_CODE_MAP, LANGUAGE_DECK_MAP, OUTPUT_PATH
 
 
 def main() -> None:
     """Generate anki cloze deck from sentences in the Notion page."""
-
-    LANGUAGE_DECK_MAP = {
-        "EN": "01_Languages::01_English",
-        "FR": "01_Languages::02_Français",
-        "RU": "01_Languages::03_Русский",
-        "DE": "01_Languages::04_Deutsch",
-        "IT": "01_Languages::05_Italiano",
-        "FA": "01_Languages::06_Farsi",
-        "ES": "01_Languages::07_Español",
-    }
-
-    LANGUAGE_CODE_MAP = {
-        "EN": "English",
-        "SK": "Slovak",
-    }
-
-    OUTPUT_FILENAME = "flashcard_deck.apkg"
-    output_dir = os.path.join(os.getcwd(), "output")
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, OUTPUT_FILENAME)
-
     setup_logger()
     load_environment()
     parser = build_argument_parser()
@@ -93,8 +72,8 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, output_path)
-        logger.success(f"Anki cloze deck generated successfully at: {output_path}")
+        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
+        logger.success(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
     except DeckGenerationError as e:
         logger.error(str(e))
         sys.exit(1)
