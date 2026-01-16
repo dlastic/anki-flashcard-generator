@@ -11,6 +11,7 @@ class TestConvertBoldText:
             ("Underline **this** word.", "underline", "Underline <u>this</u> word."),
             ("No bold here.", "cloze", "No bold here."),
             ("No bold here.", "underline", "No bold here."),
+            ("**A** and **B**", "cloze", "{{c1::A}} and {{c1::B}}"),
         ],
     )
     def test_valid_format(self, sentence, format_type, expected):
