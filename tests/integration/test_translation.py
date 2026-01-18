@@ -41,6 +41,15 @@ class TestTranslateSentences:
             translate_sentences(sentences=SAMPLE_SENTENCES, api=api)
 
     @pytest.mark.parametrize("api, env_var", API_KEYS)
+    def test_raises_on_invalid_model(self, api, env_var):
+        with pytest.raises(TranslationError):
+            translate_sentences(
+                sentences=SAMPLE_SENTENCES,
+                api=api,
+                model="non_existent_model",
+            )
+
+    @pytest.mark.parametrize("api, env_var", API_KEYS)
     def test_returns_valid_response(self, api, env_var):
         response = translate_sentences(sentences=SAMPLE_SENTENCES, api=api)
         assert isinstance(response, list)
