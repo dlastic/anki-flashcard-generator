@@ -13,11 +13,12 @@ def main() -> None:
     parser = build_argument_parser()
     args = parser.parse_args()
 
-    source_lang, target_lang, sentence_count, api = (
+    source_lang, target_lang, sentence_count, api, model = (
         args.source,
         args.target,
         args.count,
         args.api,
+        args.model,
     )
     if source_lang not in LANGUAGE_CODE_MAP:
         logger.error(f"Unsupported source language: {source_lang}")
@@ -58,6 +59,7 @@ def main() -> None:
             sentences=content,
             source_lang=source_lang,
             api=api,
+            model=model,
         )
         logger.success("Translation completed successfully.")
     except TranslationError as e:

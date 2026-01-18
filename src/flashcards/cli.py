@@ -36,6 +36,13 @@ def build_argument_parser() -> argparse.ArgumentParser:
         choices=["gemini", "openai"],
         help="LLM API to use: 'gemini' or 'openai' (default: gemini)",
     )
+    parser.add_argument(
+        "-m",
+        "--model",
+        default=None,
+        type=str.lower,
+        help="LLM model to use (default: gpt-4o for openai, gemini-3-flash-preview for gemini)",
+    )
     return parser
 
 
