@@ -53,6 +53,8 @@ def main() -> None:
     except (PageNotFoundError, PageEmptyError) as e:
         logger.error(f"Failed to get page content: {e}")
         sys.exit(1)
+    finally:
+        notion_client.close()
 
     try:
         translated_content = translate_sentences(
