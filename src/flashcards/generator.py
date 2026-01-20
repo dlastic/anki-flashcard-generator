@@ -22,6 +22,26 @@ FORMAT_PATTERNS = {
 }
 DECK_ID = 2025051101
 
+CLOZE_MODEL = genanki.Model(
+    1318636823,
+    "Cloze with image (genanki)",
+    model_type=genanki.Model.CLOZE,
+    fields=[
+        {"name": "Text", "font": "Arial"},
+        {"name": "Back Extra", "font": "Arial"},
+        {"name": "MyMedia"},
+    ],
+    templates=[
+        {
+            "name": "Cloze",
+            "qfmt": "{{cloze:Text}}<br><br>\n{{MyMedia}}",
+            "afmt": "{{cloze:Text}}<br>\n{{Back Extra}}",
+        },
+    ],
+    css=".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n\n"
+    ".cloze {\n font-weight: bold;\n color: blue;\n}\n.nightMode .cloze {\n color: lightblue;\n}",
+)
+
 
 def _convert_bold_text(sentence: str, format_type: str) -> str:
     """Replace **word** with {{c1::word}} or <u>word</u> based on format_type."""
@@ -62,6 +82,8 @@ def generate_cloze_deck(
     deck_name: str,
     flashcards: list[str],
     output_path: str | Path,
+    img_files: list[str],
+    img_tags: str,
 ) -> None:
     """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(DECK_ID, deck_name)
@@ -70,9 +92,10 @@ def generate_cloze_deck(
         if not isinstance(flashcard, str) or not flashcard.strip():
             logger.warning(f"Skipping flashcard due to invalid content: {flashcard}")
             continue
-        deck.add_note(genanki.Note(model=genanki.CLOZE_MODEL, fields=[flashcard, ""]))
+        note = genanki.Note(model=CLOZE_MODEL, fields=[flashcard, "", img_tags])
+        deck.add_note(note)
 
     try:
-        genanki.Package(deck).write_to_file(output_path)
+        genanki.Package(deck, media_files=img_files).write_to_file(output_path)
     except Exception as e:
         raise DeckGenerationError(f"Failed to write deck: {e}") from e
