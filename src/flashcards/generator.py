@@ -82,13 +82,13 @@ def generate_cloze_deck(
     deck_name: str,
     flashcards: list[str],
     output_path: str | Path,
-    img_files: list[str],
-    img_tags: str,
+    img_files: list[Path],
+    img_tags_list: list[str],
 ) -> None:
     """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(DECK_ID, deck_name)
 
-    for flashcard in flashcards:
+    for flashcard, img_tags in zip(flashcards, img_tags_list):
         if not isinstance(flashcard, str) or not flashcard.strip():
             logger.warning(f"Skipping flashcard due to invalid content: {flashcard}")
             continue
