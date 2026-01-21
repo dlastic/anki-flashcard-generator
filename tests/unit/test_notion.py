@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -75,7 +75,7 @@ class TestFormatRichText:
 class TestGetPageID:
     def test_exact_match(self):
         DUMMY_PAGE_ID = "1234abcd5678efgh"
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.search.return_value = {
             "results": [
                 {
@@ -99,7 +99,7 @@ class TestGetPageID:
         mock_client.search.assert_called_once()
 
     def test_no_match(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.search.return_value = {
             "results": [
                 {
@@ -123,7 +123,7 @@ class TestGetPageID:
         mock_client.search.assert_called_once()
 
     def test_ambiguous_title(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.search.return_value = {
             "results": [
                 {
@@ -161,13 +161,13 @@ class TestGetPageID:
 
 class TestGetPageContent:
     def test_missing_page(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         with patch("flashcards.notion.get_page_id", return_value=None):
             with pytest.raises(PageNotFoundError):
                 get_page_content(mock_client, "Missing Page", count=1)
 
     def test_empty_blocks(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.blocks.children.list.return_value = {
             "results": [
                 {
@@ -189,7 +189,7 @@ class TestGetPageContent:
                 get_page_content(mock_client, "Page With Empty Block", count=1)
 
     def test_respects_count_limit(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.blocks.children.list.return_value = {
             "results": [
                 {
@@ -223,7 +223,7 @@ class TestGetPageContent:
             assert result == ["**First**", "**Second**"]
 
     def test_skips_non_bolded(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.blocks.children.list.return_value = {
             "results": [
                 {
@@ -255,7 +255,7 @@ class TestGetPageContent:
             assert result == ["**Yes bold**"]
 
     def test_fewer_bolded_than_count(self):
-        mock_client = MagicMock()
+        mock_client = Mock()
         mock_client.blocks.children.list.return_value = {
             "results": [
                 {
