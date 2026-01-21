@@ -9,30 +9,39 @@ from PIL import Image
 
 def _get_credentials() -> tuple[str, str]:
     """Retrieve Google Custom Search API credentials from environment variables."""
-    api_key = os.getenv("IMAGES_API_KEY")
-    cx = os.getenv("SEARCH_ENGINE_ID")
+    api_key = os.getenv("GOOGLE_API_KEY")
+    eng_id = os.getenv("SEARCH_ENGINE_ID")
 
-    if api_key is None or cx is None:
-        raise ValueError(
+    if api_key is None or eng_id is None:
+        raise RuntimeError(
             "Missing Google Custom Search credentials. "
-            "Set IMAGES_API_KEY and SEARCH_ENGINE_ID environment variables."
+            "Set GOOGLE_API_KEY and SEARCH_ENGINE_ID environment variables."
         )
 
-    return api_key, cx
+    return api_key, eng_id
 
 
-def _search_images(api_key: str, cx: str, query: str, num: int = 10) -> list[str]:
+def _search_images(api_key: str, eng_id: str, query: str, num: int = 10) -> list[str]:
     """Return list of image URLs from Google Custom Search."""
+    if num <= 0:
+        raise ValueError("num must be > 0")
+
     base_url = "https://www.googleapis.com/customsearch/v1"
     params = {
         "key": api_key,
-        "cx": cx,
+        "cx": eng_id,
         "q": query,
         "searchType": "image",
         "num": min(num, 10),
     }
     resp = requests.get(base_url, params=params, timeout=10)
-    resp.raise_for_status()
+    if resp.status_code != 200:
+        try:
+            err = resp.json().get("error", {}).get("message")
+        except Exception:
+            err = resp.text
+        raise RuntimeError(f"Google Custom Search failed ({resp.status_code}): {err}")
+
     data = resp.json()
     items = data.get("items", [])
     return [item.get("link") for item in items if item.get("link")]
@@ -108,7 +117,7 @@ def get_multiple_image_sets(
             out_path = out_dir / filename
             img_file_paths.append(_save_image(resized, out_path))
             img_tags.append(f"<img src='{filename}'>")
-        img_tags_list.append(" ".join(img_tags))
+        img_tags_list.append("".join(img_tags))
 
     return img_file_paths, img_tags_list
 
