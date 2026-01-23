@@ -1,8 +1,28 @@
+from io import BytesIO
 from unittest.mock import Mock, patch
 
 import pytest
+import requests
+from PIL import Image
 
-from flashcards.images import _get_credentials, _search_images
+from flashcards.images import (
+    _fetch_images,
+    _get_credentials,
+    _resize_image,
+    _search_images,
+)
+
+
+@pytest.fixture
+def jpeg_bytes():
+    buf = BytesIO()
+    Image.new("RGB", (1, 1)).save(buf, format="JPEG")
+    return buf.getvalue()
+
+
+@pytest.fixture
+def img():
+    return Image.new("RGB", (200, 100))
 
 
 class TestGetCredentials:
@@ -54,3 +74,42 @@ class TestSearchImages:
                 _search_images("key", "cx", "q")
 
         assert "Quota exceeded" in str(exc.value)
+
+
+class TestFetchImages:
+    def test_returns_images_and_respects_n(self, jpeg_bytes):
+        resp = Mock()
+        resp.raise_for_status.return_value = None
+        resp.content = jpeg_bytes
+        with patch("flashcards.images.requests.Session.get", return_value=resp):
+            assert len(_fetch_images(["u1", "u2"], n=1)) == 1
+
+    def test_errors_are_skipped(self):
+        with patch("flashcards.images.requests.Session.get") as mock_get:
+            mock_get.side_effect = requests.RequestException("fail")
+            images = _fetch_images(["u1"], n=1)
+        assert len(images) == 0
+
+    def test_invalid_n_raises(self):
+        with pytest.raises(ValueError):
+            _fetch_images(["u1"], n=0)
+
+
+class TestResizeImage:
+    @pytest.mark.parametrize(
+        "box, expected",
+        [
+            ((100, 100), (100, 50)),
+            ((300, 300), (200, 100)),
+            ((50, 50), (50, 25)),
+            ((200, 100), (200, 100)),
+        ],
+    )
+    def test_resize_image(self, img, box, expected):
+        resized = _resize_image(img, box)
+        assert resized.size == expected
+
+    def test_original_image_not_modified(self, img):
+        original_size = img.size
+        _resize_image(img, (100, 100))
+        assert img.size == original_size

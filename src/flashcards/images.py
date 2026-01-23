@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 
 import requests
+from loguru import logger
 from PIL import Image
 
 
@@ -34,7 +35,7 @@ def _search_images(api_key: str, eng_id: str, query: str, num: int = 10) -> list
         "searchType": "image",
         "num": min(num, 10),
     }
-    resp = requests.get(base_url, params=params, timeout=10)
+    resp = requests.get(base_url, params=params, timeout=1)
     if resp.status_code != 200:
         try:
             err = resp.json().get("error", {}).get("message")
@@ -50,19 +51,24 @@ def _search_images(api_key: str, eng_id: str, query: str, num: int = 10) -> list
 def _fetch_images(
     urls: list[str],
     n: int,
-    timeout: int = 10,
+    timeout: int = 1,
 ) -> list[Image.Image]:
     """Download images into memory and return PIL Image objects."""
+    if n <= 0:
+        raise ValueError("n must be > 0")
+
+    session = requests.Session()
     images: list[Image.Image] = []
     for url in urls:
         if len(images) >= n:
             break
         try:
-            resp = requests.get(url, timeout=timeout)
+            resp = session.get(url, timeout=timeout)
             resp.raise_for_status()
             with Image.open(BytesIO(resp.content)) as img:
-                images.append(img.copy())
-        except Exception:
+                images.append(img.convert("RGB"))
+        except (requests.RequestException, OSError) as e:
+            logger.debug(f"Failed to fetch image {url}: {e}")
             continue
     return images
 
