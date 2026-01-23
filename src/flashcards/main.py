@@ -3,7 +3,13 @@ import sys
 from loguru import logger
 
 from .cli import build_argument_parser, load_environment, setup_logger
-from .config import LANGUAGE_CODE_MAP, LANGUAGE_DECK_MAP, OUTPUT_PATH
+from .config import (
+    IMAGE_TARGET_BOX,
+    LANGUAGE_CODE_MAP,
+    LANGUAGE_DECK_MAP,
+    OUTPUT_DIR,
+    OUTPUT_PATH,
+)
 
 
 def main() -> None:
@@ -33,6 +39,7 @@ def main() -> None:
         generate_cloze_deck,
         generate_flashcards,
     )
+    from .images import delete_files, get_multiple_image_sets
     from .notion import (
         PageEmptyError,
         PageNotFoundError,
@@ -76,7 +83,28 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        generate_cloze_deck(LANGUAGE_DECK_MAP[target_lang], flashcards, OUTPUT_PATH)
+        img_file_paths, img_tags_list = get_multiple_image_sets(
+            queries=[item.words_source for item in translated_content],
+            out_dir=OUTPUT_DIR,
+            imgs_per_query=5,
+            box=IMAGE_TARGET_BOX,
+        )
+        logger.success("Images generated successfully.")
+    except Exception as e:
+        logger.warning(f"Image generation failed, continuing deck generation without images: {e}")  # fmt: skip
+        img_file_paths = None
+        img_tags_list = None
+
+    try:
+        generate_cloze_deck(
+            LANGUAGE_DECK_MAP[target_lang],
+            flashcards,
+            OUTPUT_PATH,
+            img_file_paths,
+            img_tags_list,
+        )
+        if img_file_paths is not None:
+            delete_files(img_file_paths)
         logger.success(f"Anki cloze deck generated successfully at: {OUTPUT_PATH}")
     except DeckGenerationError as e:
         logger.error(str(e))

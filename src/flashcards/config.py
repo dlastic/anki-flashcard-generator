@@ -19,3 +19,5 @@ OUTPUT_FILENAME = "flashcard_deck.apkg"
 OUTPUT_DIR = Path.cwd() / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 OUTPUT_PATH = OUTPUT_DIR / OUTPUT_FILENAME
+
+IMAGE_TARGET_BOX = (400, 180)

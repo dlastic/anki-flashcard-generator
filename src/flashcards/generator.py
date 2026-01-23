@@ -35,7 +35,7 @@ CLOZE_MODEL = genanki.Model(
         {
             "name": "Cloze",
             "qfmt": "{{cloze:Text}}<br><br>\n{{MyMedia}}",
-            "afmt": "{{cloze:Text}}<br>\n{{Back Extra}}",
+            "afmt": "{{cloze:Text}}<br><br>\n{{MyMedia}}\n{{Back Extra}}",
         },
     ],
     css=".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n\n"
@@ -82,13 +82,14 @@ def generate_cloze_deck(
     deck_name: str,
     flashcards: list[str],
     output_path: str | Path,
-    img_files: list[Path],
-    img_tags_list: list[str],
+    img_files: list[Path] | None,
+    img_tags_list: list[str] | None,
 ) -> None:
     """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(DECK_ID, deck_name)
+    img_tags_iter = img_tags_list or [None] * len(flashcards)
 
-    for flashcard, img_tags in zip(flashcards, img_tags_list):
+    for flashcard, img_tags in zip(flashcards, img_tags_iter):
         if not isinstance(flashcard, str) or not flashcard.strip():
             logger.warning(f"Skipping flashcard due to invalid content: {flashcard}")
             continue
