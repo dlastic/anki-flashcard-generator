@@ -9,11 +9,11 @@ LANGUAGE_DECK_MAP = {
     "FA": "01_Languages::06_Farsi",
     "ES": "01_Languages::07_Español",
 }
-
 LANGUAGE_CODE_MAP = {
     "EN": "English",
     "SK": "Slovak",
 }
+RTL_LANGUAGES = ("FA", "AR", "HE")
 
 OUTPUT_FILENAME = "flashcard_deck.apkg"
 OUTPUT_DIR = Path.cwd() / "output"

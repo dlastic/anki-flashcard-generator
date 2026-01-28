@@ -9,6 +9,7 @@ from .config import (
     LANGUAGE_DECK_MAP,
     OUTPUT_DIR,
     OUTPUT_PATH,
+    RTL_LANGUAGES,
 )
 
 
@@ -33,12 +34,7 @@ def main() -> None:
         logger.error(f"Unsupported target language: {target_lang}")
         sys.exit(1)
 
-    from .generator import (
-        DeckGenerationError,
-        FlashcardGenerationError,
-        generate_cloze_deck,
-        generate_flashcards,
-    )
+    from .generator import DeckGenerationError, generate_cloze_deck
     from .images import delete_files, get_multiple_image_sets
     from .notion import (
         PageEmptyError,
@@ -76,17 +72,10 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        flashcards = generate_flashcards(translated_content)
-        logger.success("Flashcards generated successfully.")
-    except FlashcardGenerationError as e:
-        logger.error(f"Flashcard generation failed: {e}")
-        sys.exit(1)
-
-    try:
         img_file_paths, img_tags_list = get_multiple_image_sets(
             queries=[item.words_source for item in translated_content],
             out_dir=OUTPUT_DIR,
-            imgs_per_query=5,
+            imgs_per_query=1,
             box=IMAGE_TARGET_BOX,
         )
         logger.success("Images generated successfully.")
@@ -98,10 +87,11 @@ def main() -> None:
     try:
         generate_cloze_deck(
             LANGUAGE_DECK_MAP[target_lang],
-            flashcards,
+            translated_content,
             OUTPUT_PATH,
             img_file_paths,
             img_tags_list,
+            is_rtl=target_lang in RTL_LANGUAGES,
         )
         if img_file_paths is not None:
             delete_files(img_file_paths)
