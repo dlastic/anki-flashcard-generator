@@ -22,24 +22,52 @@ FORMAT_PATTERNS = {
 }
 DECK_ID = 2025051101
 
-CLOZE_MODEL = genanki.Model(
+# Conditionally display source words, sentence and images if the fields are not empty
+FRONT_TEMPLATE = """\
+{{#source_words}}<div>{{source_words}}</div>{{/source_words}}
+{{#source_sentence}}<div>{{source_sentence}}</div>{{/source_sentence}}
+<div class="target">{{cloze:target_sentence}}</div><br>
+{{#image}}<div>{{image}}</div><br>{{/image}}
+"""
+BACK_TEMPLATE = FRONT_TEMPLATE + "{{Back Extra}}"
+CSS_LTR = """\
+.card {
+  font-family: arial;
+  font-size: 20px;
+  text-align: center;
+  color: black;
+  background-color: white;
+}
+
+.cloze {
+  font-weight: bold;
+  color: blue;
+}
+
+.nightMode .cloze {
+  color: lightblue;
+}
+"""
+
+CLOZE_MODEL_LTR = genanki.Model(
     1318636823,
-    "Cloze with image (genanki)",
+    "Cloze LTR language",
     model_type=genanki.Model.CLOZE,
     fields=[
-        {"name": "Text", "font": "Arial"},
-        {"name": "Back Extra", "font": "Arial"},
-        {"name": "MyMedia"},
+        {"name": "source_words"},
+        {"name": "source_sentence"},
+        {"name": "target_sentence"},
+        {"name": "image"},
+        {"name": "Back Extra"},
     ],
     templates=[
         {
             "name": "Cloze",
-            "qfmt": "{{cloze:Text}}<br><br>\n{{MyMedia}}",
-            "afmt": "{{cloze:Text}}<br><br>\n{{MyMedia}}\n{{Back Extra}}",
+            "qfmt": FRONT_TEMPLATE,
+            "afmt": BACK_TEMPLATE,
         },
     ],
-    css=".card {\n font-family: arial;\n font-size: 20px;\n text-align: center;\n color: black;\n background-color: white;\n}\n\n"
-    ".cloze {\n font-weight: bold;\n color: blue;\n}\n.nightMode .cloze {\n color: lightblue;\n}",
+    css=CSS_LTR,
 )
 
 
@@ -50,50 +78,31 @@ def _convert_bold_text(sentence: str, format_type: str) -> str:
     return BOLD_PATTERN.sub(FORMAT_PATTERNS[format_type], sentence)
 
 
-def _format_flashcard(words: str, source: str, target: str) -> str:
-    """Format a flashcard with underlined source and cloze target."""
-    return (
-        f"<i>{words}</i><br>"
-        f"<i>{_convert_bold_text(source, 'underline')}</i><br>"
-        f"{_convert_bold_text(target, 'cloze')}"
-    )
-
-
-def generate_flashcards(translated_content: list[TranslationItem]) -> list[str]:
-    """Generate a list of flashcards"""
-    flashcards = []
-    for translation in translated_content:
-        words, sentence_source, sentence_target = (
-            translation.words_source,
-            translation.sentence_source,
-            translation.sentence_target,
-        )
-
-        if "**" not in sentence_target:
-            logger.warning(f"Skipping flashcard due to missing bold tags in: {sentence_target}")  # fmt:skip
-            continue
-
-        flashcards.append(_format_flashcard(words, sentence_source, sentence_target))
-
-    return flashcards
-
-
 def generate_cloze_deck(
     deck_name: str,
-    flashcards: list[str],
+    translated_content: list[TranslationItem],
     output_path: str | Path,
     img_files: list[Path] | None,
     img_tags_list: list[str] | None,
 ) -> None:
     """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(DECK_ID, deck_name)
-    img_tags_iter = img_tags_list or [None] * len(flashcards)
+    img_tags_iter = img_tags_list or [None] * len(translated_content)
 
-    for flashcard, img_tags in zip(flashcards, img_tags_iter):
-        if not isinstance(flashcard, str) or not flashcard.strip():
-            logger.warning(f"Skipping flashcard due to invalid content: {flashcard}")
+    for translation, img_tags in zip(translated_content, img_tags_iter):
+        if not isinstance(translation, TranslationItem):
+            logger.warning(f"Skipping translation due to invalid content: {translation}")  # fmt:skip
             continue
-        note = genanki.Note(model=CLOZE_MODEL, fields=[flashcard, "", img_tags])
+        note = genanki.Note(
+            model=CLOZE_MODEL_LTR,
+            fields=[
+                f"<i>{translation.words_source}</i>",
+                f"<i>{_convert_bold_text(translation.sentence_source, 'underline')}</i>",
+                f"{_convert_bold_text(translation.sentence_target, 'cloze')}",
+                img_tags or "",
+                "",
+            ],
+        )
         deck.add_note(note)
 
     try:
