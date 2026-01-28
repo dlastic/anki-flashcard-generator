@@ -48,6 +48,11 @@ CSS_LTR = """\
   color: lightblue;
 }
 """
+CSS_RTL = CSS_LTR + """
+.target {
+  direction: rtl;
+}
+"""
 
 CLOZE_MODEL_LTR = genanki.Model(
     1318636823,
@@ -70,6 +75,26 @@ CLOZE_MODEL_LTR = genanki.Model(
     css=CSS_LTR,
 )
 
+CLOZE_MODEL_RTL = genanki.Model(
+    1318636824,
+    "Cloze RTL language",
+    model_type=genanki.Model.CLOZE,
+    fields=[
+        {"name": "source_words"},
+        {"name": "source_sentence"},
+        {"name": "target_sentence", "rtl": True},
+        {"name": "image"},
+        {"name": "Back Extra"},
+    ],
+    templates=[
+        {
+            "name": "Cloze",
+            "qfmt": FRONT_TEMPLATE,
+            "afmt": BACK_TEMPLATE,
+        },
+    ],
+    css=CSS_RTL,
+)
 
 def _convert_bold_text(sentence: str, format_type: str) -> str:
     """Replace **word** with {{c1::word}} or <u>word</u> based on format_type."""
@@ -84,6 +109,7 @@ def generate_cloze_deck(
     output_path: str | Path,
     img_files: list[Path] | None,
     img_tags_list: list[str] | None,
+    is_rtl: bool = False,
 ) -> None:
     """Generate a file with a deck of anki cloze cards."""
     deck = genanki.Deck(DECK_ID, deck_name)
@@ -94,7 +120,7 @@ def generate_cloze_deck(
             logger.warning(f"Skipping translation due to invalid content: {translation}")  # fmt:skip
             continue
         note = genanki.Note(
-            model=CLOZE_MODEL_LTR,
+            model=CLOZE_MODEL_RTL if is_rtl else CLOZE_MODEL_LTR,
             fields=[
                 f"<i>{translation.words_source}</i>",
                 f"<i>{_convert_bold_text(translation.sentence_source, 'underline')}</i>",
