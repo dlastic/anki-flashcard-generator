@@ -9,7 +9,7 @@ from flashcards.translation import (
 )
 
 APIS = ["gemini", "openai"]
-REQUIRED_API_KEYS = ["GEMINI_API_KEY", "OPENAI_API_KEY"]
+REQUIRED_API_KEYS = ["GEMINI_DEV_API_KEY", "OPENAI_API_KEY"]
 APIS_KEYS = list(zip(APIS, REQUIRED_API_KEYS))
 SAMPLE_SENTENCES = [
     "Parler plusieurs langues est un vrai **avantage**.",

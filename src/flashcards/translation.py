@@ -62,7 +62,10 @@ class _GeminiAdapter(_LLMAdapter):
         from google.genai import types
         from google.genai.errors import APIError
 
-        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+        # Use "GEMINI_DEV_API_KEY" to avoid warning message from google genai when
+        # having GEMINI_API_KEY and GOOGLE_API_KEY set:
+        # "Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY."
+        GEMINI_API_KEY = os.getenv("GEMINI_DEV_API_KEY")
         if GEMINI_API_KEY is None:
             raise TranslationError("Missing API key for Gemini API.")
 
