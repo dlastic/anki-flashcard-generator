@@ -8,6 +8,8 @@ LANGUAGE_DECK_MAP = {
     "IT": "01_Languages::05_Italiano",
     "FA": "01_Languages::06_Farsi",
     "ES": "01_Languages::07_Español",
+    "AR": "01_Languages::08_Arabic",
+    "HE": "01_Languages::09_Hebrew",
 }
 LANGUAGE_CODE_MAP = {
     "EN": "English",
