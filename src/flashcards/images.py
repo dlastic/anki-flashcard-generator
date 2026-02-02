@@ -66,7 +66,9 @@ def _fetch_images(
             resp = session.get(url, timeout=timeout)
             resp.raise_for_status()
             with Image.open(BytesIO(resp.content)) as img:
-                images.append(img.convert("RGB"))
+                if img.mode == "P" and "transparency" in img.info:
+                    img = img.convert("RGBA")
+                images.append(img.copy())
         except (requests.RequestException, OSError) as e:
             logger.debug(f"Failed to fetch image {url}: {e}")
             continue
